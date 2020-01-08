@@ -37,6 +37,8 @@ extern void resetScene(void);
 //信息对象
 extern mqd_t uartQueue;
 
+//测试，0普通回复 1开启 2循环预热开启
+int tmp_is = 0;
 
 unsigned long confirm_down_time = 0;
 //串口的数据
@@ -1687,15 +1689,22 @@ static void* UartFunc(void* arg)
 {
 	uint8_t getstr1[10];
 	//默认应答
-	uint8_t texBufArray[] = { 0xEB, 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xD8, 0x2A };
+	uint8_t back_texBufArray[] = { 0xEB, 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xD8, 0x2A };
+
+	//开机
+	uint8_t open_texBufArray[] =   { 0xEB, 0x1B, 0x03, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x45, 0x08 };
+
+	//循环预热
+	uint8_t yure_texBufArray[] =   { 0xEB, 0x1B, 0x09, 0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x78, 0xA6 };
 	int len = 0;
 	int flag = 0;
 	while (1){
 		memset(getstr1, 0, sizeof(getstr1));
 		len = read(TEST_PORT, getstr1, sizeof(getstr1));
+		
 		//如果串口有数据
 		if (len > 0){
-
+			printf("buf=%02X\n", getstr1[0]);
 			//写入环形缓存
 			for (int i = 0; i < len; i++){
 				flag = in_chain_list(&chain_list, getstr1[i]);
@@ -1703,20 +1712,25 @@ static void* UartFunc(void* arg)
 			process_data(&uart_data, &chain_list);
 			//已经完成
 			if (uart_data.state == 2){
-				for (int j = 0; j< uart_data.count; j++){
-					printf("0x%02X ", uart_data.buf_data[j]);
-
-				}
-				printf("\nfinish \n");
+				
 				uart_data.state = 0;
 				uart_data.count = 0;
-
 				//分析收到的数
-				process_frame(&g_main_uart_chg_data, uart_data.buf_data);
-
+				//process_frame(&g_main_uart_chg_data, uart_data.buf_data);
 				//延迟20ms 发送回复信息
-				usleep(1);
-				write(TEST_PORT, texBufArray, sizeof(texBufArray));
+				usleep(5);
+				if (tmp_is == 0){
+					printf("\ normal\n");
+					write(TEST_PORT, back_texBufArray, sizeof(back_texBufArray));
+				}
+				else if (tmp_is == 1){
+					printf("\ open\n");
+					write(TEST_PORT, open_texBufArray, sizeof(open_texBufArray));
+				}
+				else{
+					printf("\ yuren\n");
+					write(TEST_PORT, yure_texBufArray, sizeof(yure_texBufArray));
+				}
 
 			}
 		}
@@ -1779,7 +1793,7 @@ int SceneRun(void)
     for (;;)
     {
 
-		write(TEST_PORT, texBufArray, sizeof(texBufArray));
+		//write(TEST_PORT, texBufArray, sizeof(texBufArray));
         bool result = false;
 
         if (CheckQuitValue())
@@ -1834,14 +1848,20 @@ int SceneRun(void)
 				case 1073741885:
 					//ScreenOff
 					printf("power on\off");
-					if (off2on == 0){
+					if (tmp_is == 0 || tmp_is == 2){
+						tmp_is = 1;
+					}
+					else{
+						tmp_is = 2;
+					}
+					/*if (off2on == 0){
 						ScreenOff();
 						off2on = 1;
 					}
 					else{
 						ScreenOn();
 						off2on = 0;
-					}
+					}*/
 					break;
                 case SDLK_LEFT:
                     ituSceneSendEvent(&theScene, EVENT_CUSTOM_KEY2, NULL);
