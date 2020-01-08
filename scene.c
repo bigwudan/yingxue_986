@@ -1715,7 +1715,7 @@ static void* UartFunc(void* arg)
 				process_frame(&g_main_uart_chg_data, uart_data.buf_data);
 
 				//延迟20ms 发送回复信息
-				usleep(10);
+				usleep(1);
 				write(TEST_PORT, texBufArray, sizeof(texBufArray));
 
 			}
@@ -1731,6 +1731,14 @@ int SceneRun(void)
 
 
 	//樱雪
+	//开关状态
+	static unsigned char off2on = 0;
+
+	//串口
+	itpRegisterDevice(TEST_PORT, &TEST_DEVICE);
+	ioctl(TEST_PORT, ITP_IOCTL_INIT, NULL);
+	ioctl(TEST_PORT, ITP_IOCTL_RESET, (void *)CFG_UART3_BAUDRATE);
+
 
 	struct mq_attr mq_uart_attr;
 	mq_uart_attr.mq_flags = 0;
@@ -1817,7 +1825,6 @@ int SceneRun(void)
 
 				case 1073741889:
                 //case SDLK_DOWN:
-					
 					curr_node_widget->updown_cb(curr_node_widget, 1);
                     break;
 				case 1073741883:
@@ -1825,7 +1832,16 @@ int SceneRun(void)
 					break;
 
 				case 1073741885:
+					//ScreenOff
 					printf("power on\off");
+					if (off2on == 0){
+						ScreenOff();
+						off2on = 1;
+					}
+					else{
+						ScreenOn();
+						off2on = 0;
+					}
 					break;
                 case SDLK_LEFT:
                     ituSceneSendEvent(&theScene, EVENT_CUSTOM_KEY2, NULL);

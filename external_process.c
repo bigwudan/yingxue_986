@@ -62,9 +62,9 @@ void ExternalProcessEvent(ExternalEvent* ev)
 
 void ExternalProcessInit(void)
 {
-    buttonLayer = ituSceneFindWidget(&theScene, "buttonLayer");
+    /*buttonLayer = ituSceneFindWidget(&theScene, "buttonLayer");
     assert(buttonLayer);
 
     buttonCoverFlow = ituSceneFindWidget(&theScene, "buttonCoverFlow");
-    assert(buttonCoverFlow);
+    assert(buttonCoverFlow);*/
 }
