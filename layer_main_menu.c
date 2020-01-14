@@ -57,7 +57,7 @@ static ITUCoverFlow* mainMenuCoverFlow;
 static ITUShadow *mainMenuSubShadow[2][12];
 static ITUContainer *mainMenuSubContainer[2][12];
 
-extern struct main_uart_chg g_main_uart_chg_data;
+
 
 #if CFG_LCD_WIDTH == 1280
 static ITUText *mainMenuSubText[2][12];
@@ -578,19 +578,17 @@ void MainMenuAnimationSetPlay(bool toPlay)
 	}
 }
 
+
+
+extern struct main_uart_chg g_main_uart_chg_data;
+extern pthread_mutex_t msg_mutex;
+
 //主页面初始哈
 static void MainLayer_init()
 {
 	static int test_flag = 0;
 	ITUWidget *t_widget = NULL;
 	char t_buf[30] = { 0 };
-
-	//test
-	/*		if (test_flag == 0){
-	test_flag++;
-	ituLayerGoto(ituSceneFindWidget(&theScene, "moshiLayer"));
-	return true;
-	}*/
 
 	//预热模式 0 预热 1单巡航 2全天候巡航 3下次预热时间
 	t_widget = ituSceneFindWidget(&theScene, "yureSprite");
@@ -605,12 +603,17 @@ static void MainLayer_init()
 		ituSpriteGoto(t_widget, 2);
 	}
 	else if (yingxue_base.yure_mode == 3){
+		int beg = 0;
+		int end = 0;
+		char t_buf[100] = { 0 };
+		//计算下次预热时间
+		calcNextYure(&beg, &end);
+		if (end == 0) end = beg;
+		sprintf(t_buf, "%d:00--%d:59", beg, end);
+		t_widget = ituSceneFindWidget(&theScene, "Text35");
+		ituTextSetString(t_widget, t_buf);
 		ituSpriteGoto(t_widget, 3);
-		if (yingxue_base.yure_set_count){
-			t_widget = ituSceneFindWidget(&theScene, "Text35");
-			sprintf(t_buf, "%d:00~%d:00", yingxue_base.yure_set_count, yingxue_base.yure_set_count + 1);
-			ituTextSetString(t_widget, t_buf);
-		}
+
 	}
 
 	//模式 0 常规 1超热 2 eco 3水果
@@ -629,9 +632,6 @@ static void MainLayer_init()
 		ituSpriteGoto(t_widget, 3);
 	}
 
-
-
-
 	//全部隐藏
 	t_widget = ituSceneFindWidget(&theScene, "Background100");
 	ituWidgetSetVisible(t_widget, false);
@@ -641,86 +641,32 @@ static void MainLayer_init()
 	t_widget = ituSceneFindWidget(&theScene, "Background134");
 	ituWidgetSetVisible(t_widget, false);
 	//默认选中第一个
-	curr_node_widget = &mainlayer_0;
+	curr_node_widget = &mainlayer_1;
 	t_widget = ituSceneFindWidget(&theScene, curr_node_widget->focus_back_name);
 	ituWidgetSetVisible(t_widget, true);
+
+	yingxue_base.lock_state = 0;
 }
 
-
-//樱雪主页串口数据改变改变
-bool YX_MainOnChg(ITUWidget* widget, char* param)
-{
-	char t_buf[20] = { 0 };
-	ITUWidget* t_widget = NULL;
-	/*g_main_uart_chg_data.water_show = 1;
-	g_main_uart_chg_data.fire_show = 1;
-	g_main_uart_chg_data.wind_show = 1;*/
-
-	g_main_uart_chg_data.chushui_temp = 30;
-
-	//显示出水温度
-	if (g_main_uart_chg_data.chushui_temp){
-		sprintf(t_buf, "%d", g_main_uart_chg_data.chushui_temp);
-		t_widget = ituSceneFindWidget(&theScene, "Text17");
-		ituTextSetString(t_widget, t_buf);
-
-	}
-
-
-	//Background34
-	if (g_main_uart_chg_data.state_show & 0x01){
-		//显示
-		t_widget = ituSceneFindWidget(&theScene, "Background34");
-		ituWidgetSetVisible(t_widget, true);
-
-	}
-	else{
-		//不显示
-		t_widget = ituSceneFindWidget(&theScene, "Background34");
-		ituWidgetSetVisible(t_widget, false);
-	}
-
-	//Background35
-	if (g_main_uart_chg_data.state_show & 0x04){
-		//显示
-		t_widget = ituSceneFindWidget(&theScene, "Background35");
-		ituWidgetSetVisible(t_widget, true);
-
-	}
-	else{
-		//不显示
-		t_widget = ituSceneFindWidget(&theScene, "Background35");
-		ituWidgetSetVisible(t_widget, false);
-	}
-
-	//Background36
-	if (g_main_uart_chg_data.state_show & 0x02){
-		//显示
-		t_widget = ituSceneFindWidget(&theScene, "Background36");
-		ituWidgetSetVisible(t_widget, true);
-
-	}
-	else{
-		//不显示
-		t_widget = ituSceneFindWidget(&theScene, "Background36");
-		ituWidgetSetVisible(t_widget, false);
-	}
-
-	printf("wudan=%p\n", &g_main_uart_chg_data);
-
-	return true;
-}
 
 //樱雪每个页面初始化
 bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 {
 	static int test_flag = 0;
 	ITUWidget *t_widget = NULL;
+	char t_buf[10] = { 0 };
+
+	//welcome页面
+	if (strcmp(widget->name, "welcom") == 0){
+
+	}
 	//MainLayer 首页
-	if (strcmp(widget->name, "MainLayer") == 0){
+	else if (strcmp(widget->name, "MainLayer") == 0){
 		MainLayer_init();
 	}
 	else if (strcmp(widget->name, "yureLayer") == 0){
+		//初始化
+		yingxue_base.lock_state = 3;
 		//全部隐藏
 		t_widget = ituSceneFindWidget(&theScene, "BackgroundButton78");
 		ituWidgetSetVisible(t_widget, false);
@@ -741,18 +687,30 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 		ituWidgetSetVisible(t_widget, true);
 		t_widget = ituSceneFindWidget(&theScene, curr_node_widget->name);
 		ituWidgetSetVisible(t_widget, false);
+
+
+		//预热时间
+		int beg = 0;
+		int end = 0;
+		char t_buf[100] = { 0 };
+		//计算下次预热时间
+		calcNextYure(&beg, &end);
+		if (end == 0) end = beg;
+		sprintf(t_buf, "%02d--%02d", beg, end);
+		t_widget = ituSceneFindWidget(&theScene, "Text99");
+		ituTextSetString(t_widget, t_buf);
 	}
 	else if (strcmp(widget->name, "yureshijianLayer") == 0){
+		//初始化
+		yingxue_base.lock_state = 3;
 		//默认选中第一个
 		curr_node_widget = &yureshijian_widget_0;
-		//显示选中
-		t_widget = ituSceneFindWidget(&theScene, curr_node_widget->focus_back_name);
-		ituWidgetSetVisible(t_widget, true);
-		//屏蔽未选中
-		t_widget = ituSceneFindWidget(&theScene, curr_node_widget->name);
-		ituWidgetSetVisible(t_widget, false);
+
 	}
 	else if (strcmp(widget->name, "yureshezhiLayer") == 0){
+		//初始化
+		yingxue_base.lock_state = 3;
+
 		//默认选中第一个
 		curr_node_widget = &yureshezhiLayer_0;
 
@@ -793,8 +751,27 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 		t_widget = ituSceneFindWidget(&theScene, "Background107");
 		ituWidgetSetVisible(t_widget, false);
 
+		//设置时间
+		struct timeval curr_time;
+		struct tm *t_tm;
+		get_rtc_time(&curr_time, NULL);
+		t_tm = localtime(&curr_time);
+
+		//设置小时
+		t_widget = ituSceneFindWidget(&theScene, "Text42");
+		sprintf(t_buf, "%02d", t_tm->tm_hour);
+		ituTextSetString(t_widget, t_buf);
+
+		//设置min
+		t_widget = ituSceneFindWidget(&theScene, "Text43");
+		sprintf(t_buf, "%02d", t_tm->tm_min);
+		ituTextSetString(t_widget, t_buf);
+
 	}
 	else if (strcmp(widget->name, "moshiLayer") == 0){
+		//初始化
+		yingxue_base.lock_state = 3;
+
 		//默认选中第一个
 		curr_node_widget = &moshiLayer_0;
 
@@ -840,6 +817,9 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 	}
 	//出水设置
 	else if (strcmp(widget->name, "chushui") == 0){
+		//初始化
+		yingxue_base.lock_state = 3;
+
 		//默认第一个
 		curr_node_widget = &chushui_0;
 
@@ -849,10 +829,27 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 		t_widget = ituSceneFindWidget(&theScene, "chushui_BackgroundButton73");
 		ituWidgetSetVisible(t_widget, false);
 
-		//2
-		//本体
-		//t_widget = ituSceneFindWidget(&theScene, "chushui_Background13");
-		//ituWidgetSetVisible(t_widget, false);
+
+		//根据设置温度显示Text38
+		t_widget = ituSceneFindWidget(&theScene, "Text38");
+		if (yingxue_base.select_set_moshi_mode > 0){
+			if (yingxue_base.select_set_moshi_mode == 1){
+				sprintf(t_buf, "%02d", yingxue_base.normal_moshi.temp);
+				ituTextSetString(t_widget, t_buf);
+			}
+			else if (yingxue_base.select_set_moshi_mode == 2){
+				sprintf(t_buf, "%02d", yingxue_base.super_moshi.temp);
+				ituTextSetString(t_widget, t_buf);
+			}
+			else if (yingxue_base.select_set_moshi_mode == 3){
+				sprintf(t_buf, "%02d", yingxue_base.eco_moshi.temp);
+				ituTextSetString(t_widget, t_buf);
+			}
+			else if (yingxue_base.select_set_moshi_mode == 4){
+				sprintf(t_buf, "%02d", yingxue_base.fruit_moshi.temp);
+				ituTextSetString(t_widget, t_buf);
+			}
+		}
 
 		//选中背景
 		t_widget = ituSceneFindWidget(&theScene, "chushui_Background45");
@@ -868,6 +865,136 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 		ituWidgetSetVisible(t_widget, false);
 
 
+	}
+
+}
+
+//欢迎页面，定时器
+bool WelcomeOnTimer(ITUWidget* widget, char* param)
+{
+	//上电，等待2秒
+	if (yingxue_base.run_state == 0 || yingxue_base.run_state == 1){
+		sleep(2);
+		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+		//发送开机
+		//改变状态开机
+		SEND_OPEN_CMD();
+		yingxue_base.run_state = 1;
+	}
+	//关机，等待2秒
+	else if (yingxue_base.run_state == 2){
+		//发送关机
+		//改变状态开机
+		SEND_CLOSE_CMD();
+		sleep(1);
+		ScreenOff();
+	}
+	return true;
+}
+
+//主页定时器
+bool MainLayerOnTimer(ITUWidget* widget, char* param)
+{
+	//1秒运行一次
+	static struct timeval last_tm;
+	struct timeval now_tm;
+	char t_buf[20] = { 0 };
+	ITUWidget* t_widget;
+	get_rtc_time(&now_tm, NULL);
+
+
+
+	if (now_tm.tv_sec < last_tm.tv_sec + 1){
+		return true;
+	}
+
+	//是否显示闪烁
+	if (yingxue_base.lock_state == 1){
+		//如果5s都没有动作，闪烁
+		if (now_tm.tv_sec > yingxue_base.last_shezhi_tm.tv_sec + 2){
+			yingxue_base.lock_state = 2;
+		}
+	}
+	//开始闪烁
+	else if (yingxue_base.lock_state == 2){
+		t_widget = (ITUWidget*)ituSceneFindWidget(&theScene, "Text17");
+		//闪烁5s结束
+		if (now_tm.tv_sec > yingxue_base.last_shezhi_tm.tv_sec + 7){
+			ituWidgetSetVisible(t_widget, true);
+			yingxue_base.lock_state = 0;
+		}
+		else{
+			if (t_widget){
+				if (t_widget->visible == 0){
+					ituWidgetSetVisible(t_widget, true);
+				}
+				else{
+					ituWidgetSetVisible(t_widget, false);
+				}
+			}
+		}
+	}
+
+
+	//加锁
+	pthread_mutex_lock(&msg_mutex);
+	//显示出水温度
+	sprintf(t_buf, "%d", g_main_uart_chg_data.chushui_temp);
+	t_widget = ituSceneFindWidget(&theScene, "Text17");
+	ituTextSetString(t_widget, t_buf);
+
+
+
+
+	//Background34
+	if (g_main_uart_chg_data.state_show & 0x01){
+		//显示
+		t_widget = ituSceneFindWidget(&theScene, "Background34");
+		ituWidgetSetVisible(t_widget, true);
+
+	}
+	else{
+		//不显示
+		t_widget = ituSceneFindWidget(&theScene, "Background34");
+		ituWidgetSetVisible(t_widget, false);
+	}
+
+	//Background35
+	if (g_main_uart_chg_data.state_show & 0x04){
+		//显示
+		t_widget = ituSceneFindWidget(&theScene, "Background35");
+		ituWidgetSetVisible(t_widget, true);
+
+	}
+	else{
+		//不显示
+		t_widget = ituSceneFindWidget(&theScene, "Background35");
+		ituWidgetSetVisible(t_widget, false);
+	}
+
+	//Background36
+	if (g_main_uart_chg_data.state_show & 0x02){
+		//显示
+		t_widget = ituSceneFindWidget(&theScene, "Background36");
+		ituWidgetSetVisible(t_widget, true);
+
+	}
+	else{
+		//不显示
+		t_widget = ituSceneFindWidget(&theScene, "Background36");
+		ituWidgetSetVisible(t_widget, false);
+	}
+	pthread_mutex_unlock(&msg_mutex);
+	get_rtc_time(&last_tm, NULL);
+	return true;
+}
+
+//ERROnTimer
+bool ERROnTimer(ITUWidget* widget, char* param)
+{
+	sleep(2);
+	if (g_main_uart_chg_data.is_err == 0){
+		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
 	}
 	return true;
 }
