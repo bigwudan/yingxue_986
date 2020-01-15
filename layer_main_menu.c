@@ -873,7 +873,8 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 bool WelcomeOnTimer(ITUWidget* widget, char* param)
 {
 	//上电，等待2秒
-	if (yingxue_base.run_state == 0 || yingxue_base.run_state == 1){
+	if (yingxue_base.run_state == 0){
+		
 		sleep(2);
 		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
 		//发送开机
@@ -888,6 +889,10 @@ bool WelcomeOnTimer(ITUWidget* widget, char* param)
 		SEND_CLOSE_CMD();
 		sleep(1);
 		ScreenOff();
+	}
+	else if (yingxue_base.run_state == 1){
+	
+		sleep(10);
 	}
 	return true;
 }

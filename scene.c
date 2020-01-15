@@ -1713,8 +1713,10 @@ process_data(struct uart_data_tag *dst, struct chain_list_tag *p_chain_list)
 				else{
 					flag = 1;
 				}
+#ifdef _WIN32
 				//测试方便去掉crc
 				flag = 0;
+#endif
 				//如果出错
 				if (flag == 1){
 					dst->state = 1;
@@ -1866,6 +1868,12 @@ static void* UartFunc(void* arg)
 			process_data(&uart_data, &chain_list);
 			//已经完成
 			if (uart_data.state == 2){
+				//打印结束
+				/*for (int j = 0; j < 17; j++){
+					printf("%02X ", uart_data.buf_data[j]);
+				}
+				printf("\nend\n");*/
+
 				is_has = 0;
 				uart_data.state = 0;
 				uart_data.count = 0;
@@ -2130,7 +2138,9 @@ int SceneRun(void)
 					break;
 
 				case 1073741883:
+					//确定
 					curtime = buf_tm;
+					printf("ok begtime=%lu\n", curtime);
 					break;
 				case 13://回车
 					get_rtc_time(&last_tm, NULL);
@@ -2138,29 +2148,29 @@ int SceneRun(void)
 					curr_node_widget->confirm_cb(curr_node_widget, 2);
 					break;
 				case 1073741885:
-					printf("power on\off");
+					//printf("power on\off");
 					get_rtc_time(&last_tm, NULL);
 					if (yingxue_base.run_state == 1){
 						yingxue_base.run_state = 2;
+						ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
 					}
 					else{
 						ScreenOn();
 						yingxue_base.run_state = 1;
 					}
-					ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
-
 					break;
 
 				case SDLK_LEFT: //开机和关机
 					get_rtc_time(&last_tm, NULL);
 					if (yingxue_base.run_state == 1){
+						ScreenOff();
 						yingxue_base.run_state = 2;
 					}
 					else{
 						ScreenOn();
 						yingxue_base.run_state = 1;
 					}
-					ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
+					//ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
 					break;
 				case SDLK_RIGHT:
 					printf("cur=%s\n", curr_node_widget->name);
@@ -2206,14 +2216,14 @@ int SceneRun(void)
 
 			case SDL_KEYUP:
 				result = ituSceneUpdate(&theScene, ITU_EVENT_KEYUP, ev.key.keysym.sym, 0, 0);
+				unsigned long t_curr = 0;
+				struct timeval t_time = { 0 };
 				switch (ev.key.keysym.sym)
 				{
 				case 1073741883:
-					printf("sdlk_keyup longpress\n");
-					unsigned long t_curr = 0;
-					struct timeval t_time = { 0 };
 					get_rtc_time(&t_time, NULL);
 					t_curr = t_time.tv_sec - curtime.tv_sec;
+					
 					if (t_curr >= 2){
 						printf("long press\n");
 						if (curr_node_widget->long_press_cb)
