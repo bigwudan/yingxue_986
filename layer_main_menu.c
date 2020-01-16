@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ite/itp.h"
 #include "scene.h"
 #include "ctrlboard.h"
 
@@ -85,89 +86,89 @@ void MainMenuAnimationSetPlay(bool);
 
 static void MainMenuPlay2ndRipple0(int arg)
 {
-    ITUAnimation* mainMenu2Animation = mainMenu2Animations[0];
+	ITUAnimation* mainMenu2Animation = mainMenu2Animations[0];
 
-    ituWidgetSetVisible(mainMenu2Animation, true);
-    ituAnimationPlay(mainMenu2Animation, 0);
+	ituWidgetSetVisible(mainMenu2Animation, true);
+	ituAnimationPlay(mainMenu2Animation, 0);
 }
 
 static void MainMenuPlay2ndRipple1(int arg)
 {
-    ITUAnimation* mainMenu2Animation = mainMenu2Animations[1];
+	ITUAnimation* mainMenu2Animation = mainMenu2Animations[1];
 
-    ituWidgetSetVisible(mainMenu2Animation, true);
-    ituAnimationPlay(mainMenu2Animation, 0);
+	ituWidgetSetVisible(mainMenu2Animation, true);
+	ituAnimationPlay(mainMenu2Animation, 0);
 }
 
 static bool MainMenuBackgroundUpdate(ITUWidget* widget, ITUEvent ev, int arg1, int arg2, int arg3)
 {
-    bool result = ituIconUpdate(widget, ev, arg1, arg2, arg3);
+	bool result = ituIconUpdate(widget, ev, arg1, arg2, arg3);
 
-    if (ev == ITU_EVENT_MOUSEDOWN)
-    {
-        if (theConfig.mainmenu_type == MAINMENU_COVERFLOW_RIPPLE && ituWidgetIsEnabled(widget))
-        {
-            int x = arg2 - widget->rect.x;
-            int y = arg3 - widget->rect.y;
+	if (ev == ITU_EVENT_MOUSEDOWN)
+	{
+		if (theConfig.mainmenu_type == MAINMENU_COVERFLOW_RIPPLE && ituWidgetIsEnabled(widget))
+		{
+			int x = arg2 - widget->rect.x;
+			int y = arg3 - widget->rect.y;
 
-            if (ituWidgetIsInside(widget, x, y))
-            {
-                int xx, yy, i;
+			if (ituWidgetIsInside(widget, x, y))
+			{
+				int xx, yy, i;
 
-                for (i = 0; i < RIPPLE_MAX_COUNT; i++)
-                {
-                    ITUAnimation *mainMenu1Animation, *mainMenu2Animation;
-                        
-                    mainMenu1Animation = mainMenu1Animations[i];
-                    if (mainMenu1Animation->playing)
-                        continue;
+				for (i = 0; i < RIPPLE_MAX_COUNT; i++)
+				{
+					ITUAnimation *mainMenu1Animation, *mainMenu2Animation;
 
-                    mainMenu2Animation = mainMenu2Animations[i];
+					mainMenu1Animation = mainMenu1Animations[i];
+					if (mainMenu1Animation->playing)
+						continue;
 
-                    xx = x - ituWidgetGetWidth(mainMenu1Animation) / 2;
-                    yy = y - ituWidgetGetHeight(mainMenu1Animation) / 2;
-                    ituWidgetSetVisible(mainMenu1Animation, true);
-                    ituWidgetSetPosition(mainMenu1Animation, xx, yy);
-                    ituAnimationPlay(mainMenu1Animation, 0);
+					mainMenu2Animation = mainMenu2Animations[i];
 
-                    if (i == 0)
-                        ituSceneExecuteCommand(&theScene, RIPPLE_2ND_DELAY, MainMenuPlay2ndRipple0, 0);
-                    else if (i == 1)
-                        ituSceneExecuteCommand(&theScene, RIPPLE_2ND_DELAY, MainMenuPlay2ndRipple1, 0);
+					xx = x - ituWidgetGetWidth(mainMenu1Animation) / 2;
+					yy = y - ituWidgetGetHeight(mainMenu1Animation) / 2;
+					ituWidgetSetVisible(mainMenu1Animation, true);
+					ituWidgetSetPosition(mainMenu1Animation, xx, yy);
+					ituAnimationPlay(mainMenu1Animation, 0);
 
-                    xx = x - ituWidgetGetWidth(mainMenu2Animation) / 2;
-                    yy = y - ituWidgetGetHeight(mainMenu2Animation) / 2;
-                    ituWidgetSetPosition(mainMenu2Animation, xx, yy);
+					if (i == 0)
+						ituSceneExecuteCommand(&theScene, RIPPLE_2ND_DELAY, MainMenuPlay2ndRipple0, 0);
+					else if (i == 1)
+						ituSceneExecuteCommand(&theScene, RIPPLE_2ND_DELAY, MainMenuPlay2ndRipple1, 0);
 
-                    result = true;
-                    break;
-                }
-            }
-        }
-    }
-    return result;
+					xx = x - ituWidgetGetWidth(mainMenu2Animation) / 2;
+					yy = y - ituWidgetGetHeight(mainMenu2Animation) / 2;
+					ituWidgetSetPosition(mainMenu2Animation, xx, yy);
+
+					result = true;
+					break;
+				}
+			}
+		}
+	}
+	return result;
 }
 
 static void MainMenuAnimationOnStop(ITUAnimation* animation)
 {
-    ituWidgetSetVisible(animation, false);
+	ituWidgetSetVisible(animation, false);
 }
 
 bool MainMenuOnEnter(ITUWidget* widget, char* param)
 {
-    int i, j;
+	int i, j;
 
-    if (!mainMenuBackground)
-    {
-        mainMenuBackground = ituSceneFindWidget(&theScene, "mainMenuBackground");
-        assert(mainMenuBackground);
-        ituWidgetSetUpdate(mainMenuBackground, MainMenuBackgroundUpdate);
+	if (!mainMenuBackground)
+	{
+		mainMenuBackground = ituSceneFindWidget(&theScene, "mainMenuBackground");
+		assert(mainMenuBackground);
+		ituWidgetSetUpdate(mainMenuBackground, MainMenuBackgroundUpdate);
 
-        mainMenuRippleBackground = ituSceneFindWidget(&theScene, "mainMenuRippleBackground");
-        assert(mainMenuRippleBackground);
+		mainMenuRippleBackground = ituSceneFindWidget(&theScene, "mainMenuRippleBackground");
+		assert(mainMenuRippleBackground);
 
-        mainMenuCoverFlow = ituSceneFindWidget(&theScene, "mainMenuCoverFlow");
-        assert(mainMenuCoverFlow);
+		mainMenuCoverFlow = ituSceneFindWidget(&theScene, "mainMenuCoverFlow");
+		assert(mainMenuCoverFlow);
 
 		for (i = 0; i < 2; i++){
 			for (j = 0; j < MENU_TOTAL_APP; j++){
@@ -212,34 +213,34 @@ bool MainMenuOnEnter(ITUWidget* widget, char* param)
 			assert(mainMenuTmpAnimation[i]);
 		}
 
-        mainMenuPageFlow = ituSceneFindWidget(&theScene, "mainMenuPageFlow");
-        assert(mainMenuPageFlow);
+		mainMenuPageFlow = ituSceneFindWidget(&theScene, "mainMenuPageFlow");
+		assert(mainMenuPageFlow);
 
-        i = 0;
-        mainMenu1Animation0 = ituSceneFindWidget(&theScene, "mainMenu1Animation0");
-        ituAnimationSetOnStop(mainMenu1Animation0, MainMenuAnimationOnStop);
-        mainMenu1Animations[i] = mainMenu1Animation0;
+		i = 0;
+		mainMenu1Animation0 = ituSceneFindWidget(&theScene, "mainMenu1Animation0");
+		ituAnimationSetOnStop(mainMenu1Animation0, MainMenuAnimationOnStop);
+		mainMenu1Animations[i] = mainMenu1Animation0;
 
-        mainMenu2Animation0 = ituSceneFindWidget(&theScene, "mainMenu2Animation0");
-        assert(mainMenu2Animation0);
-        ituAnimationSetOnStop(mainMenu2Animation0, MainMenuAnimationOnStop);
-        mainMenu2Animations[i] = mainMenu2Animation0;
-        i++;
+		mainMenu2Animation0 = ituSceneFindWidget(&theScene, "mainMenu2Animation0");
+		assert(mainMenu2Animation0);
+		ituAnimationSetOnStop(mainMenu2Animation0, MainMenuAnimationOnStop);
+		mainMenu2Animations[i] = mainMenu2Animation0;
+		i++;
 
-        mainMenu1Animation1 = ituSceneFindWidget(&theScene, "mainMenu1Animation1");
-        assert(mainMenu1Animation1);
-        ituAnimationSetOnStop(mainMenu1Animation1, MainMenuAnimationOnStop);
-        mainMenu1Animations[i] = mainMenu1Animation1;
+		mainMenu1Animation1 = ituSceneFindWidget(&theScene, "mainMenu1Animation1");
+		assert(mainMenu1Animation1);
+		ituAnimationSetOnStop(mainMenu1Animation1, MainMenuAnimationOnStop);
+		mainMenu1Animations[i] = mainMenu1Animation1;
 
-        mainMenu2Animation1 = ituSceneFindWidget(&theScene, "mainMenu2Animation1");
-        assert(mainMenu2Animation1);
-        ituAnimationSetOnStop(mainMenu2Animation1, MainMenuAnimationOnStop);
-        mainMenu2Animations[i] = mainMenu2Animation1;
-        i++;
+		mainMenu2Animation1 = ituSceneFindWidget(&theScene, "mainMenu2Animation1");
+		assert(mainMenu2Animation1);
+		ituAnimationSetOnStop(mainMenu2Animation1, MainMenuAnimationOnStop);
+		mainMenu2Animations[i] = mainMenu2Animation1;
+		i++;
 
-    #if !defined(CFG_PLAY_VIDEO_ON_BOOTING) && !defined(CFG_PLAY_MJPEG_ON_BOOTING)        
-        ituSceneExecuteCommand(&theScene, 3, ScenePredraw, 0);
-    #endif
+#if !defined(CFG_PLAY_VIDEO_ON_BOOTING) && !defined(CFG_PLAY_MJPEG_ON_BOOTING)        
+		ituSceneExecuteCommand(&theScene, 3, ScenePredraw, 0);
+#endif
 
 		for (i = 0; i < 6; i++){
 			theConfig.order[0][i] = i;
@@ -251,35 +252,35 @@ bool MainMenuOnEnter(ITUWidget* widget, char* param)
 				ituWidgetSetVisible(mainMenuPFSubContainer[i][theConfig.order[i][j]], true);
 			}
 		}
-    }
+	}
 
 	MainMenuShadowSetVisibility(false);
 
 	MainMenuSetDisplayType();
 
-    for (i = 0; i < RIPPLE_MAX_COUNT; i++)
-    {
-        ituWidgetSetVisible(mainMenu1Animations[i], false);
-        ituWidgetSetVisible(mainMenu2Animations[i], false);
-    }
+	for (i = 0; i < RIPPLE_MAX_COUNT; i++)
+	{
+		ituWidgetSetVisible(mainMenu1Animations[i], false);
+		ituWidgetSetVisible(mainMenu2Animations[i], false);
+	}
 
-    return true;
+	return true;
 }
 
 bool MainMenuOnLeave(ITUWidget* widget, char* param)
 {
-    int i;
+	int i;
 
-    for (i = 0; i < RIPPLE_MAX_COUNT; i++)
-    {
-        ituAnimationStop(mainMenu1Animations[i]);
-        ituAnimationStop(mainMenu2Animations[i]);
-    }
-    return true;
+	for (i = 0; i < RIPPLE_MAX_COUNT; i++)
+	{
+		ituAnimationStop(mainMenu1Animations[i]);
+		ituAnimationStop(mainMenu2Animations[i]);
+	}
+	return true;
 }
 
 bool MainMenuOnTimer(ITUWidget* widget, char* param)
-{		
+{
 	bool updated = false;
 
 	// arrange menu
@@ -472,7 +473,7 @@ bool MainMenuCoverFlowOnChange(ITUWidget* widget, char* param)
 
 void MainMenuReset(void)
 {
-    mainMenuBackground = NULL;
+	mainMenuBackground = NULL;
 }
 
 void MainMenuShadowSetVisibility(bool isVisible)
@@ -538,7 +539,7 @@ int MainMenuGetCurrentPosition(int x, int y)
 	for (j = 0; j < MENU_ROW_RANGE; j++){
 		if ((x >= (MENU_FIRST_X + MENU_COLUMN_DIST * j))
 			&& (x < (MENU_FIRST_X + MENU_COLUMN_DIST * (j + 1))))
-			pos =  j;
+			pos = j;
 	}
 #else 0
 	for (i = 0; i < MENU_ROW_NUM; i++){
@@ -573,7 +574,7 @@ void MainMenuAnimationSetPlay(bool toPlay)
 			{
 				ituAnimationStop(mainMenuSubAnimation[i][j]);
 			}
-				
+
 		}
 	}
 }
@@ -658,7 +659,7 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 
 	//welcome页面
 	if (strcmp(widget->name, "welcom") == 0){
-
+		//ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
 	}
 	//MainLayer 首页
 	else if (strcmp(widget->name, "MainLayer") == 0){
@@ -872,18 +873,36 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 //欢迎页面，定时器
 bool WelcomeOnTimer(ITUWidget* widget, char* param)
 {
+
+
+
 	//上电，等待2秒
 	if (yingxue_base.run_state == 0){
-		
-		sleep(2);
-		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
 		//发送开机
 		//改变状态开机
-		SEND_OPEN_CMD();
 		yingxue_base.run_state = 1;
+		SEND_OPEN_CMD();
+		sleep(2);
+		printf("1_welcom=%d\n", yingxue_base.run_state);
+		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+	}
+	//关机
+	else if (yingxue_base.run_state == 2){
+		SEND_CLOSE_CMD();
+		sleep(1);
+		ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_OFF, NULL);
+		
+	}
+	//开机
+	else if (yingxue_base.run_state == 1){
+		SEND_OPEN_CMD();
+		ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_ON, NULL);
+		sleep(2);
+		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+	
 	}
 	//关机，等待2秒
-	else if (yingxue_base.run_state == 2){
+	/*else if (yingxue_base.run_state == 2){
 		//发送关机
 		//改变状态开机
 		SEND_CLOSE_CMD();
@@ -891,9 +910,9 @@ bool WelcomeOnTimer(ITUWidget* widget, char* param)
 		ScreenOff();
 	}
 	else if (yingxue_base.run_state == 1){
-	
+
 		sleep(10);
-	}
+	}*/
 	return true;
 }
 
@@ -940,56 +959,62 @@ bool MainLayerOnTimer(ITUWidget* widget, char* param)
 		}
 	}
 
+	//如果是0和3状态
+	if (yingxue_base.lock_state == 0 || yingxue_base.lock_state == 3){
+		//加锁
+		pthread_mutex_lock(&msg_mutex);
+		//显示出水温度
+		sprintf(t_buf, "%d", g_main_uart_chg_data.chushui_temp);
+		printf("chushui=%s\n", t_buf);
+		t_widget = ituSceneFindWidget(&theScene, "Text17");
+		ituTextSetString(t_widget, t_buf);
 
-	//加锁
-	pthread_mutex_lock(&msg_mutex);
-	//显示出水温度
-	sprintf(t_buf, "%d", g_main_uart_chg_data.chushui_temp);
-	t_widget = ituSceneFindWidget(&theScene, "Text17");
-	ituTextSetString(t_widget, t_buf);
 
 
 
+		//Background34
+		if (g_main_uart_chg_data.state_show & 0x01){
+			//显示
+			t_widget = ituSceneFindWidget(&theScene, "Background34");
+			ituWidgetSetVisible(t_widget, true);
 
-	//Background34
-	if (g_main_uart_chg_data.state_show & 0x01){
-		//显示
-		t_widget = ituSceneFindWidget(&theScene, "Background34");
-		ituWidgetSetVisible(t_widget, true);
+		}
+		else{
+			//不显示
+			t_widget = ituSceneFindWidget(&theScene, "Background34");
+			ituWidgetSetVisible(t_widget, false);
+		}
 
+		//Background35
+		if (g_main_uart_chg_data.state_show & 0x04){
+			//显示
+			t_widget = ituSceneFindWidget(&theScene, "Background35");
+			ituWidgetSetVisible(t_widget, true);
+
+		}
+		else{
+			//不显示
+			t_widget = ituSceneFindWidget(&theScene, "Background35");
+			ituWidgetSetVisible(t_widget, false);
+		}
+
+		//Background36
+		if (g_main_uart_chg_data.state_show & 0x02){
+			//显示
+			t_widget = ituSceneFindWidget(&theScene, "Background36");
+			ituWidgetSetVisible(t_widget, true);
+
+		}
+		else{
+			//不显示
+			t_widget = ituSceneFindWidget(&theScene, "Background36");
+			ituWidgetSetVisible(t_widget, false);
+		}
+		pthread_mutex_unlock(&msg_mutex);
 	}
-	else{
-		//不显示
-		t_widget = ituSceneFindWidget(&theScene, "Background34");
-		ituWidgetSetVisible(t_widget, false);
-	}
 
-	//Background35
-	if (g_main_uart_chg_data.state_show & 0x04){
-		//显示
-		t_widget = ituSceneFindWidget(&theScene, "Background35");
-		ituWidgetSetVisible(t_widget, true);
 
-	}
-	else{
-		//不显示
-		t_widget = ituSceneFindWidget(&theScene, "Background35");
-		ituWidgetSetVisible(t_widget, false);
-	}
 
-	//Background36
-	if (g_main_uart_chg_data.state_show & 0x02){
-		//显示
-		t_widget = ituSceneFindWidget(&theScene, "Background36");
-		ituWidgetSetVisible(t_widget, true);
-
-	}
-	else{
-		//不显示
-		t_widget = ituSceneFindWidget(&theScene, "Background36");
-		ituWidgetSetVisible(t_widget, false);
-	}
-	pthread_mutex_unlock(&msg_mutex);
 	get_rtc_time(&last_tm, NULL);
 	return true;
 }

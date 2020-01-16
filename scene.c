@@ -190,20 +190,26 @@ static void node_widget_up_down(struct node_widget *widget, unsigned char state)
 	}
 	//主页面上下调整温度
 	else if (yingxue_base.lock_state == 0 || yingxue_base.lock_state == 1){
+		//记录调整的数量
+		static int count_idx;
+		//如何正常状态
+		if (yingxue_base.lock_state == 0){
+			count_idx = g_main_uart_chg_data.shezhi_temp;
+		}
 		//时间
 		get_rtc_time(&yingxue_base.last_shezhi_tm, NULL);
 		yingxue_base.lock_state = 1;
 		if (state == 0){
-			g_main_uart_chg_data.shezhi_temp = g_main_uart_chg_data.shezhi_temp + 1;
+			count_idx += 1;
 		}
 		else{
-			g_main_uart_chg_data.shezhi_temp = g_main_uart_chg_data.shezhi_temp - 1;
+			count_idx -= 1;
 		}
 		t_widget = ituSceneFindWidget(&theScene, "Text17");
-		sprintf(t_buf, "%d", g_main_uart_chg_data.shezhi_temp);
+		sprintf(t_buf, "%d", count_idx);
 		ituTextSetString(t_widget, t_buf);
 		//设置温度 模式设置	4	模式设置	设置温度	定升设定
-		sendCmdToCtr(0x04, 0x00, g_main_uart_chg_data.shezhi_temp, 0x00, 0x00);
+		sendCmdToCtr(0x04, 0x00, count_idx, 0x00, 0x00);
 	}
 	else {
 		if (widget->state == 1){ //如果已经锁定
@@ -1858,7 +1864,6 @@ static void* UartFunc(void* arg)
 #else
 		len = read(TEST_PORT, getstr1, sizeof(getstr1));
 #endif
-
 		//如果串口有数据
 		if (len > 0){
 			//写入环形缓存
@@ -1869,10 +1874,10 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 				//打印结束
-				/*for (int j = 0; j < 17; j++){
-					printf("%02X ", uart_data.buf_data[j]);
+				for (int j = 0; j < 17; j++){
+				printf("%02X ", uart_data.buf_data[j]);
 				}
-				printf("\nend\n");*/
+				printf("\nend\n");
 
 				is_has = 0;
 				uart_data.state = 0;
@@ -2020,6 +2025,8 @@ int SceneRun(void)
 	{
 		bool result = false;
 		//樱雪
+		//开机关机
+
 
 		//判断是否有错误代码
 		if (g_main_uart_chg_data.is_err){
@@ -2148,27 +2155,29 @@ int SceneRun(void)
 					curr_node_widget->confirm_cb(curr_node_widget, 2);
 					break;
 				case 1073741885:
-					//printf("power on\off");
+					printf("power on\off\n");
 					get_rtc_time(&last_tm, NULL);
 					if (yingxue_base.run_state == 1){
 						yingxue_base.run_state = 2;
-						ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
+						//ScreenOff();
+						
 					}
 					else{
-						ScreenOn();
+						//ScreenOn();
 						yingxue_base.run_state = 1;
 					}
+					ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
 					break;
 
 				case SDLK_LEFT: //开机和关机
 					get_rtc_time(&last_tm, NULL);
 					if (yingxue_base.run_state == 1){
-						ScreenOff();
 						yingxue_base.run_state = 2;
+						ScreenOff();
 					}
 					else{
-						ScreenOn();
 						yingxue_base.run_state = 1;
+						ScreenOn();
 					}
 					//ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
 					break;
@@ -2223,7 +2232,7 @@ int SceneRun(void)
 				case 1073741883:
 					get_rtc_time(&t_time, NULL);
 					t_curr = t_time.tv_sec - curtime.tv_sec;
-					
+
 					if (t_curr >= 2){
 						printf("long press\n");
 						if (curr_node_widget->long_press_cb)
