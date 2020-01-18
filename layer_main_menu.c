@@ -72,6 +72,25 @@ extern struct node_widget chushui_0;
 extern struct node_widget chushui_1;
 extern struct node_widget chushui_2;
 
+//出厂设置
+extern struct node_widget layer1_0; //返回按键
+extern struct node_widget layer1_1; //水流
+extern struct node_widget layer1_2; //火焰
+extern struct node_widget layer1_3; //风机
+extern struct node_widget layer1_4; //出水温度
+extern struct node_widget layer1_5; //风速
+extern struct node_widget layer1_6; //pa
+extern struct node_widget layer1_7; //dh
+extern struct node_widget layer1_8; //ph
+extern struct node_widget layer1_9;//fy
+extern struct node_widget layer1_10;//pl
+extern struct node_widget layer1_11;//fd
+extern struct node_widget layer1_12;//pd
+extern struct node_widget layer1_13;//hs
+extern struct node_widget layer1_14;//hi
+extern struct node_widget layer1_15;//ed
+
+
 //樱雪基础数据
 extern struct yingxue_base_tag yingxue_base;
 
@@ -333,6 +352,112 @@ static void chushui()
 	ituWidgetSetVisible(t_widget, false);
 }
 
+//出厂设置
+static void Layer1()
+{
+	ITUWidget *t_widget = NULL;
+	char t_buf[10] = { 0 };
+	//默认第一个
+	curr_node_widget = &layer1_0;
+
+	//水流
+	if (yingxue_base.state_show & 0x01){
+		//显示
+		t_widget = ituSceneFindWidget(&theScene, "Background99");
+		ituWidgetSetVisible(t_widget, true);
+
+	}
+	else{
+		//不显示
+		t_widget = ituSceneFindWidget(&theScene, "Background99");
+		ituWidgetSetVisible(t_widget, false);
+	}
+
+	//Background35
+	if (yingxue_base.state_show & 0x04){
+		//显示
+		t_widget = ituSceneFindWidget(&theScene, "Background101");
+		ituWidgetSetVisible(t_widget, true);
+
+	}
+	else{
+		//不显示
+		t_widget = ituSceneFindWidget(&theScene, "Background101");
+		ituWidgetSetVisible(t_widget, false);
+	}
+
+	//Background36
+	if (yingxue_base.state_show & 0x02){
+		//显示
+		t_widget = ituSceneFindWidget(&theScene, "Background103");
+		ituWidgetSetVisible(t_widget, true);
+
+	}
+	else{
+		//不显示
+		t_widget = ituSceneFindWidget(&theScene, "Background103");
+		ituWidgetSetVisible(t_widget, false);
+	}
+
+	//出水温度
+	sprintf(t_buf, "%02d", yingxue_base.chushui_temp);
+	t_widget = ituSceneFindWidget(&theScene, "Text94");
+	ituTextSetString(t_widget, t_buf);
+
+	//风机转速
+	sprintf(t_buf, "%02d", yingxue_base.wind_rate);
+	t_widget = ituSceneFindWidget(&theScene, "Text96");
+	ituTextSetString(t_widget, t_buf);
+
+	//pa
+	sprintf(t_buf, "%02d", yingxue_base.fa_num);
+	t_widget = ituSceneFindWidget(&theScene, "Text22");
+	ituTextSetString(t_widget, t_buf);
+
+	//dh
+	sprintf(t_buf, "%02d", yingxue_base.dh_num);
+	t_widget = ituSceneFindWidget(&theScene, "Text90");
+	ituTextSetString(t_widget, t_buf);
+
+	//ph
+	sprintf(t_buf, "%02d", yingxue_base.ph_num);
+	t_widget = ituSceneFindWidget(&theScene, "Text33");
+	ituTextSetString(t_widget, t_buf);
+
+	//fy
+	t_widget = ituSceneFindWidget(&theScene, "Text82");
+	ituTextSetString(t_widget, "00");
+
+	//pl
+	
+	t_widget = ituSceneFindWidget(&theScene, "Text39");
+	ituTextSetString(t_widget, "00");
+
+	//Fd对应前面协议中防冻，把前面协议中防冻参数调出来可调(无防冻参数，只有开启)
+	t_widget = ituSceneFindWidget(&theScene, "Text80");
+	ituTextSetString(t_widget, "00");
+	
+	//dh
+	sprintf(t_buf, "%02d", yingxue_base.dh_num);
+	t_widget = ituSceneFindWidget(&theScene, "Text45");
+	ituTextSetString(t_widget, t_buf);
+
+	//hs
+	sprintf(t_buf, "%02d", yingxue_base.huishui_temp_1);
+	t_widget = ituSceneFindWidget(&theScene, "Text73");
+	ituTextSetString(t_widget, t_buf);
+
+	//hi
+	sprintf(t_buf, "%02d", yingxue_base.ne_num);
+	t_widget = ituSceneFindWidget(&theScene, "Text58");
+	ituTextSetString(t_widget, t_buf);
+
+	//ed
+	t_widget = ituSceneFindWidget(&theScene, "Text65");
+	ituTextSetString(t_widget, "00");
+	return;
+}
+
 //樱雪每个页面初始化
 bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 {
@@ -366,6 +491,9 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 	//chushui
 	else if (strcmp(widget->name, "chushui") == 0){
 		chushui();
+	}
+	else if (strcmp(widget->name, "Layer1") == 0){
+		Layer1();
 	}
 	return true;
 

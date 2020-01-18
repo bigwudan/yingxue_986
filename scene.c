@@ -188,6 +188,25 @@ struct node_widget chushui_0;
 struct node_widget chushui_1;
 struct node_widget chushui_2;
 
+//出厂设置
+struct node_widget layer1_0; //返回按键
+struct node_widget layer1_1; //水流
+struct node_widget layer1_2; //火焰
+struct node_widget layer1_3; //风机
+struct node_widget layer1_4; //出水温度
+struct node_widget layer1_5; //风速
+struct node_widget layer1_6; //pa
+struct node_widget layer1_7; //dh
+struct node_widget layer1_8; //ph
+struct node_widget layer1_9;//fy
+struct node_widget layer1_10;//pl
+struct node_widget layer1_11;//fd
+struct node_widget layer1_12;//pd
+struct node_widget layer1_13;//hs
+struct node_widget layer1_14;//hi
+struct node_widget layer1_15;//ed
+
+
 //最后一次活动的时间
 struct timeval last_down_time;
 
@@ -876,6 +895,125 @@ static void chushui_up_down_cb(struct node_widget *widget, unsigned char state)
 }
 
 
+//设置出厂模式
+static void layer1_widget_confirm_cb(struct node_widget *widget, unsigned char state)
+{
+	ITUWidget *t_widget = NULL;
+	char *t_buf;
+	int num = 0;
+	t_widget = ituSceneFindWidget(&theScene, "MainLayer");
+	if (strcmp(widget->name, "BackgroundButton60") == 0){
+		ituLayerGoto((ITULayer *)t_widget);
+	}
+	//支持长按
+	else if (widget->type == 1){
+		if (widget->state == 0){
+			//锁定
+			widget->state = 1;
+			t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
+			ituWidgetSetVisible(t_widget, true);
+		}
+		else{
+			//解除锁定
+			widget->state = 0;
+			t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
+			ituWidgetSetVisible(t_widget, false);
+		}
+	}
+	
+
+
+}
+
+static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
+{
+
+	struct node_widget *t_node_widget = NULL;
+	struct ITUWidget *t_widget = NULL;
+	char t_buf[20] = { 0 };
+	unsigned char t_num = 0;
+	if (widget->state == 1){ //如果已经锁定
+		//lock_widget_up_down(widget, state);
+		//pa 对应 FA
+		//(unsigned char cmd, unsigned char data_1, unsigned char data_2, unsigned char data_3, unsigned char data_4, enum main_pthread_mq_state state)
+		if (strcmp(widget->name, "Text22") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text22");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+			sendCmdToCtr(0x10, t_num, 0, 0, 0, SET_CHUCHANG);
+		}
+		else if (strcmp(widget->name, "Text90") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text90");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+			sendCmdToCtr(0x13, t_num, 0, 0, 0, SET_CHUCHANG);
+		}
+		else if (strcmp(widget->name, "Text33") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text33");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+			sendCmdToCtr(0x11, t_num, 0, 0, 0, SET_CHUCHANG);
+		}
+		else if (strcmp(widget->name, "Text82") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text82");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+		}
+		else if (strcmp(widget->name, "Text39") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text39");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+			sendCmdToCtr(0x12, t_num, 0, 0, 0, SET_CHUCHANG);
+			
+		}
+		//空
+		else if (strcmp(widget->name, "Text80") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text80");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+		}
+		else if (strcmp(widget->name, "Text45") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text45");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+			sendCmdToCtr(0x13, t_num, 0, 0, 0, SET_CHUCHANG);
+		}
+		else if (strcmp(widget->name, "Text73") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text73");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+			yingxue_base.huishui_temp = t_num;
+		}
+		else if (strcmp(widget->name, "Text58") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text58");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+			sendCmdToCtr(0x14, t_num, 0, 0, 0, SET_CHUCHANG);
+		}
+		else if (strcmp(widget->name, "Text65") == 0){
+			t_widget = ituSceneFindWidget(&theScene, "Text65");
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
+		}
+		if (state == 0){
+			t_num = t_num + 1;
+		}
+		else{
+			t_num = t_num - 1;
+		}
+		sprintf(t_buf, "%d", t_num);
+		ituTextSetString(t_widget, t_buf);
+
+	}
+	else{
+		if (state == 0){
+			if (widget->up)
+				t_node_widget = widget->up;
+		}
+		else{
+			if (widget->down){
+				t_node_widget = widget->down;
+			}
+		}
+
+		if (t_node_widget){
+			command_widget_up_down(t_node_widget);
+		}
+	}
+
+}
+
+
 //按键时间发生时的触发事件
 static void key_down_process()
 {
@@ -1256,6 +1394,163 @@ static void node_widget_init()
 	chushui_2.name = "chushui_BackgroundButton1";
 	chushui_2.confirm_cb = chushui_widget_confirm_cb;
 	chushui_2.updown_cb = chushui_up_down_cb;
+
+	//出厂设置
+	//返回按键
+	layer1_0.up = NULL;
+	layer1_0.down = &layer1_1;
+	layer1_0.focus_back_name = NULL;
+	layer1_0.name = "BackgroundButton60";
+	layer1_0.confirm_cb = layer1_widget_confirm_cb;
+	layer1_0.updown_cb = layer1_up_down_cb;
+
+
+
+
+
+	//水流
+	layer1_1.up = &layer1_0;
+	layer1_1.down = &layer1_2;
+	layer1_1.focus_back_name = NULL;
+	layer1_1.name = "Background99";
+	layer1_1.confirm_cb = layer1_widget_confirm_cb;
+	layer1_1.updown_cb = layer1_up_down_cb;
+
+
+
+	//火焰
+	layer1_2.up = &layer1_1;
+	layer1_2.down = &layer1_3;
+	layer1_2.focus_back_name = NULL;
+	layer1_2.name = "Background101";
+	layer1_2.confirm_cb = layer1_widget_confirm_cb;
+	layer1_2.updown_cb = layer1_up_down_cb;
+
+
+	//风机
+	layer1_3.up = &layer1_2;
+	layer1_3.down = &layer1_4;
+	layer1_3.focus_back_name = NULL;
+	layer1_3.name = "Background103";
+	layer1_3.confirm_cb = layer1_widget_confirm_cb;
+	layer1_3.updown_cb = layer1_up_down_cb;
+
+	//出水温度
+	layer1_4.up = &layer1_3;
+	layer1_4.down = &layer1_5;
+	layer1_4.focus_back_name = NULL;
+	layer1_4.name = "Text94";
+	layer1_4.confirm_cb = layer1_widget_confirm_cb;
+	layer1_4.updown_cb = layer1_up_down_cb;
+
+
+	//风速
+	layer1_5.up = &layer1_4;
+	layer1_5.down = &layer1_6;
+	layer1_5.focus_back_name = NULL;
+	layer1_5.name = "Text96";
+	layer1_5.confirm_cb = layer1_widget_confirm_cb;
+	layer1_5.updown_cb = layer1_up_down_cb;
+
+	//pa
+	layer1_6.up = &layer1_5;
+	layer1_6.down = &layer1_7;
+	layer1_6.focus_back_name = NULL;
+	layer1_6.name = "Text22";
+	layer1_6.confirm_cb = layer1_widget_confirm_cb;
+	layer1_6.updown_cb = layer1_up_down_cb;
+	layer1_6.type = 1;
+
+	//dh
+	layer1_7.up = &layer1_6;
+	layer1_7.down = &layer1_8;
+	layer1_7.focus_back_name = NULL;
+	layer1_7.name = "Text90";
+	layer1_7.confirm_cb = layer1_widget_confirm_cb;
+	layer1_7.updown_cb = layer1_up_down_cb;
+	layer1_7.type = 1;
+
+
+
+
+
+	//ph
+	layer1_8.up = &layer1_7;
+	layer1_8.down = &layer1_9;
+	layer1_8.focus_back_name = NULL;
+	layer1_8.name = "Text33";
+	layer1_8.confirm_cb = layer1_widget_confirm_cb;
+	layer1_8.updown_cb = layer1_up_down_cb;
+	layer1_8.type = 1;
+
+	//fy
+	layer1_9.up = &layer1_8;
+	layer1_9.down = &layer1_10;
+	layer1_9.focus_back_name = NULL;
+	layer1_9.name = "Text82";
+	layer1_9.confirm_cb = layer1_widget_confirm_cb;
+	layer1_9.updown_cb = layer1_up_down_cb;
+	layer1_9.type = 1;
+
+
+	//pl
+	layer1_10.up = &layer1_9;
+	layer1_10.down = &layer1_11;
+	layer1_10.focus_back_name = NULL;
+	layer1_10.name = "Text39";
+	layer1_10.confirm_cb = layer1_widget_confirm_cb;
+	layer1_10.updown_cb = layer1_up_down_cb;
+	layer1_10.type = 1;
+
+	//fd
+	layer1_11.up = &layer1_10;
+	layer1_11.down = &layer1_12;
+	layer1_11.focus_back_name = NULL;
+	layer1_11.name = "Text80";
+	layer1_11.confirm_cb = layer1_widget_confirm_cb;
+	layer1_11.updown_cb = layer1_up_down_cb;
+	layer1_11.type = 1;
+
+	//DH
+	layer1_12.up = &layer1_11;
+	layer1_12.down = &layer1_13;
+	layer1_12.focus_back_name = NULL;
+	layer1_12.name = "Text45";
+	layer1_12.confirm_cb = layer1_widget_confirm_cb;
+	layer1_12.updown_cb = layer1_up_down_cb;
+	layer1_12.type = 1;
+
+
+	//hs
+	layer1_13.up = &layer1_12;
+	layer1_13.down = &layer1_14;
+	layer1_13.focus_back_name = NULL;
+	layer1_13.name = "Text73";
+	layer1_13.confirm_cb = layer1_widget_confirm_cb;
+	layer1_13.updown_cb = layer1_up_down_cb;
+	layer1_13.type = 1;
+
+
+	//hi
+	layer1_14.up = &layer1_13;
+	layer1_14.down = &layer1_15;
+	layer1_14.focus_back_name = NULL;
+	layer1_14.name = "Text58";
+	layer1_14.confirm_cb = layer1_widget_confirm_cb;
+	layer1_14.updown_cb = layer1_up_down_cb;
+	layer1_14.type = 1;
+
+	//ed
+	layer1_15.up = &layer1_14;
+	layer1_15.down = NULL;
+	layer1_15.focus_back_name = NULL;
+	layer1_15.name = "Text65";
+	layer1_15.confirm_cb = layer1_widget_confirm_cb;
+	layer1_15.updown_cb = layer1_up_down_cb;
+	
+
+
+
 
 	//初始一次按键超时数据
 	key_down_process();
@@ -2140,15 +2435,19 @@ int SceneRun(void)
                 switch (ev.key.keysym.sym)
                 {
                 case SDLK_UP:
-                    ituSceneSendEvent(&theScene, EVENT_CUSTOM_KEY0, NULL);
+					curr_node_widget->updown_cb(curr_node_widget, 0);
                     break;
 
                 case SDLK_DOWN:
-                    ituSceneSendEvent(&theScene, EVENT_CUSTOM_KEY1, NULL);
+					curr_node_widget->updown_cb(curr_node_widget, 1);
                     break;
+				case 13:
+					curr_node_widget->confirm_cb(curr_node_widget, 1);
+					break;
 
                 case SDLK_LEFT:
-                    ituSceneSendEvent(&theScene, EVENT_CUSTOM_KEY2, NULL);
+                    //ituSceneSendEvent(&theScene, EVENT_CUSTOM_KEY2, NULL);
+					printf("curr=%s\n", curr_node_widget->name);
                     break;
 
                 case SDLK_RIGHT:
