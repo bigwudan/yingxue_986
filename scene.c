@@ -1268,6 +1268,7 @@ extern char is_shake;
 //超时的处理函数
 static void over_time_process()
 {
+	return;
 	struct timeval now_t = { 0 };
 	get_rtc_time(&now_t, NULL);
 	//已经处理过
@@ -1383,74 +1384,69 @@ process_data(struct uart_data_tag *dst, struct chain_list_tag *p_chain_list)
 }
 //ok
 //分析得到的数组
-void process_frame(struct main_uart_chg *dst, const unsigned char *src)
+void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src)
 {
-	src = src + 2;
+	unsigned char *old = NULL;
+	//第几帧 0 , 1 , 2 , 3
+	unsigned char idx = 0;
 	//判断第几个帧
-	//第0帧
-	if ((*src & 0x0f) == 0x00){
-
-		//初始化
-		dst->state_show = 0;
-
-		//[2]主板信息   [0][0] 
-		src += 2;
-
-		//[0][1]
+	idx = (*(src + 2) & 0x0f);
+	old = src + 3;
+	if (idx == 0x00){
 		//得到主机状态
-		dst->machine_state = *src & 0x03;
+		dst->machine_state = *(old+1) & 0x03;
 		//判断是否故障
-		if ((*src & 0x04) == 0){
+		if ((*(old+1) & 0x04) == 0){
 			dst->is_err = 0;
 		}
 		else{
 			dst->is_err = 1;
 		}
 		//判断状态 流水
-		if (*src & 0x10){
+		if (*(old + 1) & 0x10){
 			dst->state_show = 0x01;
 			//风机
 		}
-		if (*src & 0x20){
+		if (*(old + 1) & 0x20){
 			dst->state_show = dst->state_show | 0x2;
 			//火焰
 		}
-		if (*src & 0x40){
+		if (*(old + 1) & 0x40){
 			dst->state_show = dst->state_show | 0x4;
 			//风压
 		}
-		if (*src & 0x80){
+		if (*(old + 1) & 0x80){
 			dst->state_show = dst->state_show | 0x8;
 		}
-
-		//设置温度 [0][4]
-		src += 3;
-		dst->shezhi_temp = *src++;
-
+		//设置温度[0][4]
+		dst->shezhi_temp = *(old+4);
 		//出水温度[0][5]
-		dst->chushui_temp = *src++;
-
+		dst->chushui_temp = *(old + 5);
 		//进水温度[0][6]
-		dst->jinshui_temp = *src++;
-
-		//错误代码或者比例阀电流
-		src++;
-		dst->err_no = *src++;
-		//第1帧
+		dst->jinshui_temp = *(old + 6);
+		//错误代码或者比例阀电流[0][8]
+		dst->err_no = *(old + 8);
+		//风机转速[0][10]
+		dst->wind_rate = *(old + 10);
 	}
-	else if ((*src & 0x0f) == 0x01){
-
-
-		//第2帧
+	else if (idx == 0x01){
+	
 	}
-	else if ((*src & 0x0f) == 0x02){
-
-
+	else if (idx == 0x02){
+		//[2][0] 当前气源号
+		dst->fa_num = *old;
+		//[2][3]
+		dst->dh_num = *(old + 3);
+		//[2][1]
+		dst->ph_num = *(old + 1);
+		//[2][4]
+		dst->ne_num = *(old + 4);
 	}
-	else if ((*src & 0x0f) == 0x03){
-
-
+	else if (idx == 0x03){
+		//[3][2] 回水温度
+		dst->huishui_temp = *(old + 2);
 	}
+	
 }
 
 
@@ -1464,9 +1460,9 @@ static unsigned char win_test()
 	0xEA, 0x1B, 0x13, 0x00, 0x00, 0x05, 0x40, 0x50, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBE, 0x5F,*/
 	unsigned char test_buf[68] = {
 		//[0][0] //[0][1]                                                 //erno
-		0xEA, 0x1B, 0x10, 0x4D, 0x00, 0x00, 0x00, 0x2D, 0x10, 0x00, 0x00, 0x00, 0x41, 0x00, 0x00, 0x79, 0x53,
+		0xEA, 0x1B, 0x10, 0x4D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x79, 0x53,
 		0xEA, 0x1B, 0x11, 0x01, 0x00, 0x00, 0x00, 0x1E, 0x0A, 0x2A, 0x28, 0x26, 0x2A, 0x00, 0x00, 0x48, 0x35,
-		0xEA, 0x1B, 0x12, 0x00, 0xCD, 0x80, 0x9E, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x05, 0x4B,
+		0xEA, 0x1B, 0x12, 0x00, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x05, 0x4B,
 		0xEA, 0x1B, 0x13, 0x00, 0x00, 0x05, 0x40, 0x50, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBE, 0x5F,
 	};
 	static int idx;
@@ -1487,9 +1483,10 @@ static void* UartFunc(void* arg)
 	struct main_pthread_mq_tag main_pthread_mq;
 	//缓存数据
 	struct uart_data_tag uart_data;
+	memset(&uart_data, 0, sizeof(struct uart_data_tag));
 
 	//线程数据
-	struct main_uart_chg main_uart_chg_data;
+	//struct main_uart_chg main_uart_chg_data;
 
 	//子线程到主线程的数据
 	struct child_to_pthread_mq_tag child_to_pthread_mq;
@@ -1522,21 +1519,12 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 				//打印结束
-				/*LOG_RECE_UART(uart_data.buf_data);
-				printf("\nend\n");*/
 				is_has = 0;
 				uart_data.state = 0;
 				uart_data.count = 0;
 				//分析收到的数
-				process_frame(&main_uart_chg_data, uart_data.buf_data);
-				//发数据到主线程
-				child_to_pthread_mq.state_show = main_uart_chg_data.state_show;
-				child_to_pthread_mq.shezhi_temp = main_uart_chg_data.shezhi_temp;
-				child_to_pthread_mq.chushui_temp = main_uart_chg_data.chushui_temp;
-				child_to_pthread_mq.jinshui_temp = main_uart_chg_data.jinshui_temp;
-				child_to_pthread_mq.err_no = main_uart_chg_data.err_no;
-				child_to_pthread_mq.machine_state = main_uart_chg_data.machine_state;
-				child_to_pthread_mq.is_err = main_uart_chg_data.is_err;
+				process_frame(&child_to_pthread_mq, uart_data.buf_data);
+
 				memset(&tm, 0, sizeof(struct timespec));
 				tm.tv_sec = 1;
 				mq_timedsend(childQueue, &child_to_pthread_mq, sizeof(struct child_to_pthread_mq_tag), 1, &tm);
@@ -1585,6 +1573,13 @@ static void run_time_task()
 		yingxue_base.jinshui_temp = child_to_pthread_mq_tag.jinshui_temp;
 		yingxue_base.err_no = child_to_pthread_mq_tag.err_no;
 		yingxue_base.is_err = child_to_pthread_mq_tag.is_err;
+		
+		yingxue_base.wind_rate = child_to_pthread_mq_tag.wind_rate;//[0][10]风机转速
+		yingxue_base.fa_num = child_to_pthread_mq_tag.fa_num;//[2][0] 当前气源号
+		yingxue_base.dh_num = child_to_pthread_mq_tag.dh_num;//[2][3]
+		yingxue_base.ph_num = child_to_pthread_mq_tag.ph_num;//[2][1]
+		yingxue_base.ne_num = child_to_pthread_mq_tag.ne_num;//[2][4]
+		yingxue_base.huishui_temp_1 = child_to_pthread_mq_tag.huishui_temp;//[3][1] 回水温度 显示的回水温度
 	}
 	if (yingxue_base.yure_mode == 0) return;
 	//单巡航模式
@@ -2129,7 +2124,7 @@ int SceneRun(void)
 		}
 
 		//判断是否定时任务需要发送数据
-
+		run_time_task();
 
 #ifdef CFG_LCD_ENABLE
         while (SDL_PollEvent(&ev))

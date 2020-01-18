@@ -342,7 +342,7 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 
 	//welcome页面
 	if (strcmp(widget->name, "welcom") == 0){
-
+		ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
 	}
 	//MainLayer 首页
 	else if (strcmp(widget->name, "MainLayer") == 0){
@@ -470,7 +470,7 @@ bool MainLayerOnTimer(ITUWidget* widget, char* param)
 //开机画面定时器
 bool WelcomeOnTimer(ITUWidget* widget, char* param)
 {
-
+	return true;
 	//是否已经动作
 	static unsigned char flag;
 	//第一次上电
