@@ -116,6 +116,16 @@ extern ITUScene theScene;
 //按键回调函数 
 typedef void(*node_widget_cb)(struct node_widget *widget, unsigned char state);
 
+//发送指令的状态
+enum main_pthread_mq_state
+{
+	OPEN_CMD =1, //开机
+	CLOSE_CMD =2, //关机
+	RUN_YURE=3, //开预热
+	STOP_YURE=4, //关预热
+	SET_TEMP=5, //设置温度
+};
+
 //控件结构体
 //控制控件
 struct node_widget
@@ -227,14 +237,14 @@ struct main_uart_chg
 #define MAX_CHAIN_NUM 50
 
 //开机
-#define SEND_OPEN_CMD() do{sendCmdToCtr(0x03, 0x01, 0x00, 0x00, 0x00, 0);}while(0)
+#define SEND_OPEN_CMD() do{sendCmdToCtr(0x03, 0x01, 0x00, 0x00, 0x00, OPEN_CMD);}while(0)
 //关机
-#define SEND_CLOSE_CMD() do{sendCmdToCtr(0x03, 0x00, 0x00, 0x00, 0x00, 1);}while(0)
+#define SEND_CLOSE_CMD() do{sendCmdToCtr(0x03, 0x00, 0x00, 0x00, 0x00, CLOSE_CMD);}while(0)
 
 //开始预热 预热	命令9	(0 - 预热关 2 - 循环预热)	 随机	预热回差设置	 随机
-#define SEND_OPEN_YURE_CMD() do{sendCmdToCtr(0x09, 0x02, 0x00, yingxue_base.huishui_temp, 0x00, 2);}while(0)
+#define SEND_OPEN_YURE_CMD() do{sendCmdToCtr(0x09, 0x02, 0x00, yingxue_base.huishui_temp, 0x00, RUN_YURE);}while(0)
 //结束预热
-#define SEND_CLOSE_YURE_CMD() do{sendCmdToCtr(0x09, 0x00, 0x00, yingxue_base.huishui_temp, 0x00, 3);}while(0)
+#define SEND_CLOSE_YURE_CMD() do{sendCmdToCtr(0x09, 0x00, 0x00, yingxue_base.huishui_temp, 0x00, STOP_YURE);}while(0)
 
 
 
@@ -256,7 +266,7 @@ void set_rtc_time(unsigned char hour, unsigned char min);
 void calcNextYure(int *beg, int *end);
 
 //发送命令
-void sendCmdToCtr(unsigned char cmd, unsigned char data_1, unsigned char data_2, unsigned char data_3, unsigned char data_4, unsigned char state);
+void sendCmdToCtr(unsigned char cmd, unsigned char data_1, unsigned char data_2, unsigned char data_3, unsigned char data_4, enum main_pthread_mq_state state);
 
 //组合数据
 void processCmdToCtrData(unsigned char cmd, unsigned char data_1,

@@ -76,7 +76,7 @@ extern struct node_widget chushui_2;
 extern struct yingxue_base_tag yingxue_base;
 
 //闪烁 0 不闪烁 1闪烁
-unsigned  char is_shake;
+char is_shake;
 
 //主页面初始化
 static void MainLayer_init()

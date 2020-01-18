@@ -483,7 +483,7 @@ static void main_widget_up_down_cb(struct node_widget *widget, unsigned char sta
 			yingxue_base.shezhi_temp = count_idx;
 			ituTextSetString(t_widget, t_buf);
 			//设置温度 模式设置	4	模式设置	设置温度	定升设定
-			sendCmdToCtr(0x04, 0x00, count_idx, 0x00, 0x00, 4);
+			sendCmdToCtr(0x04, 0x00, count_idx, 0x00, 0x00, SET_TEMP);
 		}
 	}
 }
@@ -729,28 +729,28 @@ static void moshi_widget_confirm_cb(struct node_widget *widget, unsigned char st
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton10") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
-		sendCmdToCtr(0x04, 0x00, yingxue_base.normal_moshi.temp, 0x00, 0x00, 4);
+		sendCmdToCtr(0x04, 0x00, yingxue_base.normal_moshi.temp, 0x00, 0x00, SET_TEMP);
 		yingxue_base.moshi_mode = 1;
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton11") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
-		sendCmdToCtr(0x04, 0x00, yingxue_base.super_moshi.temp, 0x00, 0x00, 4);
+		sendCmdToCtr(0x04, 0x00, yingxue_base.super_moshi.temp, 0x00, 0x00, SET_TEMP);
 		yingxue_base.moshi_mode = 2;
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton12") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
-		sendCmdToCtr(0x04, 0x00, yingxue_base.eco_moshi.temp, 0x00, 0x00, 4);
+		sendCmdToCtr(0x04, 0x00, yingxue_base.eco_moshi.temp, 0x00, 0x00, SET_TEMP);
 		yingxue_base.moshi_mode = 3;
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton13") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
-		sendCmdToCtr(0x04, 0x00, yingxue_base.fruit_moshi.temp, 0x00, 0x00, 4);
+		sendCmdToCtr(0x04, 0x00, yingxue_base.fruit_moshi.temp, 0x00, 0x00, SET_TEMP);
 		yingxue_base.moshi_mode = 4;
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
@@ -1292,15 +1292,15 @@ static void over_time_process()
 }
 
 //发送命令到控制板
-void sendCmdToCtr(unsigned char cmd, unsigned char data_1, unsigned char data_2, unsigned char data_3, unsigned char data_4, unsigned char state)
+void sendCmdToCtr(unsigned char cmd, unsigned char data_1, unsigned char data_2, unsigned char data_3, unsigned char data_4, enum main_pthread_mq_state state)
 {
-	struct uart_data_tag mq_data;
-	mq_data.state = state;
-	processCmdToCtrData(cmd, data_1, data_2, data_3, data_4, mq_data.buf_data);
+	struct main_pthread_mq_tag mq_data;
+	mq_data.state = (unsigned char)state;
+	processCmdToCtrData(cmd, data_1, data_2, data_3, data_4, mq_data.s_data);
 	struct timespec tm;
 	memset(&tm, 0, sizeof(struct timespec));
 	tm.tv_sec = 1;
-	mq_timedsend(uartQueue, &mq_data, sizeof(struct uart_data_tag), 1, &tm);
+	mq_timedsend(uartQueue, &mq_data, sizeof(struct main_pthread_mq_tag), 1, &tm);
 	return 0;
 }
 
@@ -2006,6 +2006,8 @@ static void CheckMouse(void)
 
 #endif // defined(CFG_USB_MOUSE) || defined(_WIN32)
 
+
+
 int SceneRun(void)
 {
     SDL_Event   ev;
@@ -2056,7 +2058,7 @@ int SceneRun(void)
 
     for (;;)
     {
-		printf("wudan111\n");
+		
         bool result = false;
 
         if (CheckQuitValue())
@@ -2079,7 +2081,7 @@ int SceneRun(void)
         frames++;
         if (tick - lasttick >= 1000)
         {
-            printf("fps: %d\n", frames);
+            
             frames      = 0;
             lasttick    = tick;
         }
@@ -2132,7 +2134,7 @@ int SceneRun(void)
 #ifdef CFG_LCD_ENABLE
         while (SDL_PollEvent(&ev))
         {
-			printf("wudan\n");
+			
 			//按键处理事件
 			key_down_process();
             switch (ev.type)
