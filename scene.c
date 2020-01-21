@@ -467,6 +467,8 @@ static void main_widget_confirm_cb(struct node_widget *widget, unsigned char sta
 
 static void main_widget_up_down_cb(struct node_widget *widget, unsigned char state)
 {
+	//记录上传的数据
+	static int count_idx;
 	struct node_widget *t_node_widget = NULL;
 	struct ITUWidget *t_widget = NULL;
 	char t_buf[20] = { 0 };
@@ -488,9 +490,11 @@ static void main_widget_up_down_cb(struct node_widget *widget, unsigned char sta
 	else{
 		//可以上下调整温度
 		if (yingxue_base.adjust_temp_state == 0 || yingxue_base.adjust_temp_state == 1){
-			static int count_idx;
-			yingxue_base.adjust_temp_state = 1;
-			count_idx = yingxue_base.shezhi_temp;
+			//如果才开始调整
+			if (yingxue_base.adjust_temp_state == 0){
+				yingxue_base.adjust_temp_state = 1;
+				count_idx = yingxue_base.shezhi_temp;
+			}
 			if (state == 0){
 				count_idx += 1;
 			}
@@ -910,14 +914,18 @@ static void layer1_widget_confirm_cb(struct node_widget *widget, unsigned char s
 		if (widget->state == 0){
 			//锁定
 			widget->state = 1;
-			t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
-			ituWidgetSetVisible(t_widget, true);
+			if (widget->checked_back_name){
+				t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
+				ituWidgetSetVisible(t_widget, true);
+			}
 		}
 		else{
 			//解除锁定
 			widget->state = 0;
-			t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
-			ituWidgetSetVisible(t_widget, false);
+			if (widget->checked_back_name){
+				t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
+				ituWidgetSetVisible(t_widget, false);
+			}
 		}
 	}
 	
@@ -1007,7 +1015,7 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 		}
 
 		if (t_node_widget){
-			command_widget_up_down(t_node_widget);
+			curr_node_widget = t_node_widget;
 		}
 	}
 
@@ -1398,7 +1406,7 @@ static void node_widget_init()
 	//出厂设置
 	//返回按键
 	layer1_0.up = NULL;
-	layer1_0.down = &layer1_1;
+	layer1_0.down = &layer1_6;
 	layer1_0.focus_back_name = NULL;
 	layer1_0.name = "BackgroundButton60";
 	layer1_0.confirm_cb = layer1_widget_confirm_cb;
@@ -1563,7 +1571,6 @@ extern char is_shake;
 //超时的处理函数
 static void over_time_process()
 {
-	return;
 	struct timeval now_t = { 0 };
 	get_rtc_time(&now_t, NULL);
 	//已经处理过
@@ -1575,7 +1582,6 @@ static void over_time_process()
 		is_deal_over_time = 1;
 		//如果是调整温度,给闪烁
 		if (yingxue_base.adjust_temp_state == 1){
-			printf("beg share\n");
 			is_shake = 1;
 		}
 		else{
@@ -1755,10 +1761,10 @@ static unsigned char win_test()
 	0xEA, 0x1B, 0x13, 0x00, 0x00, 0x05, 0x40, 0x50, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBE, 0x5F,*/
 	unsigned char test_buf[68] = {
 		//[0][0] //[0][1]                                                 //erno
-		0xEA, 0x1B, 0x10, 0x4D, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x79, 0x53,
-		0xEA, 0x1B, 0x11, 0x01, 0x00, 0x00, 0x00, 0x1E, 0x0A, 0x2A, 0x28, 0x26, 0x2A, 0x00, 0x00, 0x48, 0x35,
-		0xEA, 0x1B, 0x12, 0x00, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x05, 0x4B,
-		0xEA, 0x1B, 0x13, 0x00, 0x00, 0x05, 0x40, 0x50, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBE, 0x5F,
+		0xEA, 0x1B, 0x10, 0x4D, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x79, 0x53,
+		0xEA, 0x1B, 0x11, 0x01, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x48, 0x35,
+		0xEA, 0x1B, 0x12, 0x02, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30, 0x31, 0x05, 0x4B,
+		0xEA, 0x1B, 0x13, 0x03, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40, 0x41, 0xBE, 0x5F,
 	};
 	static int idx;
 	unsigned char res;
@@ -1832,12 +1838,15 @@ static void* UartFunc(void* arg)
 				}
 				//如果有指令需要发出
 				if (is_has){
-					//LOG_WRITE_UART(texBufArray);
+					struct timeval t_tm;
+					get_rtc_time(&t_tm, NULL);
+					printf("cur=%lu ", t_tm.tv_sec);
+					LOG_WRITE_UART(texBufArray);
+					printf("\n\n");
 					write(UART_PORT, texBufArray, sizeof(texBufArray));
 				}
 				//没有指令就应答
 				else{
-					//LOG_WRITE_UART(backBufArray);
 					write(UART_PORT, backBufArray, sizeof(texBufArray));
 				}
 			}
@@ -1875,6 +1884,8 @@ static void run_time_task()
 		yingxue_base.ph_num = child_to_pthread_mq_tag.ph_num;//[2][1]
 		yingxue_base.ne_num = child_to_pthread_mq_tag.ne_num;//[2][4]
 		yingxue_base.huishui_temp_1 = child_to_pthread_mq_tag.huishui_temp;//[3][1] 回水温度 显示的回水温度
+		/*LOG_CHILD_MQ(child_to_pthread_mq_tag);*/
+	
 	}
 	if (yingxue_base.yure_mode == 0) return;
 	//单巡航模式
@@ -1891,7 +1902,7 @@ static void run_time_task()
 	//预热定时任务
 	else if (yingxue_base.yure_mode == 3){
 		//这个时间是否需要启动
-		if (*(yingxue_base.dingshi_list + tm_t->tm_hour - 1) == 1){
+		if (*(yingxue_base.dingshi_list + tm_t->tm_hour) == 1){
 			if (yingxue_base.yure_state == 0){
 				//开始
 				SEND_OPEN_YURE_CMD();
@@ -2324,14 +2335,14 @@ int SceneRun(void)
 	mq_uart_attr.mq_flags = 0;
 	mq_uart_attr.mq_maxmsg = 10;
 	mq_uart_attr.mq_msgsize = sizeof(struct main_pthread_mq_tag);
-	uartQueue = mq_open("scene", O_CREAT | O_NONBLOCK, 0644, &mq_uart_attr);
+	uartQueue = mq_open("scene_1", O_CREAT | O_NONBLOCK, 0644, &mq_uart_attr);
 
 	struct mq_attr mq_child_attr;
 	mq_child_attr.mq_flags = 0;
 	mq_child_attr.mq_maxmsg = 20;
 
 	mq_child_attr.mq_msgsize = sizeof(struct child_to_pthread_mq_tag);
-	childQueue = mq_open("scene", O_CREAT | O_NONBLOCK, 0644, &mq_child_attr);
+	childQueue = mq_open("scene_2", O_CREAT | O_NONBLOCK, 0644, &mq_child_attr);
 
 
 	//收发串口线程
@@ -2342,7 +2353,8 @@ int SceneRun(void)
 
 	//环形队列
 	create_chain_list(&chain_list);
-
+	//现在的时间，长按
+	struct timeval curtime;
 
 	node_widget_init();
 
@@ -2434,6 +2446,31 @@ int SceneRun(void)
                 result = ituSceneUpdate(&theScene, ITU_EVENT_KEYDOWN, ev.key.keysym.sym, 0, 0);
                 switch (ev.key.keysym.sym)
                 {
+				//真实控制板按键
+					//case SDLK_UP:
+				case 1073741884:
+					
+					curr_node_widget->updown_cb(curr_node_widget, 0);
+					break;
+				case 1073741889:
+					//case SDLK_DOWN:
+					curr_node_widget->updown_cb(curr_node_widget, 1);
+					break;
+				case 1073741883:
+					get_rtc_time(&curtime, NULL);
+					//确定
+					break;
+				case 1073741885:
+					if (yingxue_base.run_state == 1){
+						yingxue_base.run_state = 2;
+					}
+					else{
+						yingxue_base.run_state = 1;
+					}
+					ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
+					break;
+
+				//键盘按键
                 case SDLK_UP:
 					curr_node_widget->updown_cb(curr_node_widget, 0);
                     break;
@@ -2451,7 +2488,10 @@ int SceneRun(void)
                     break;
 
                 case SDLK_RIGHT:
-                    ituSceneSendEvent(&theScene, EVENT_CUSTOM_KEY3, NULL);
+                    //长按
+					if (curr_node_widget->long_press_cb){
+						curr_node_widget->long_press_cb(curr_node_widget, NULL);
+					}
                     break;
 
                 case SDLK_INSERT:
@@ -2492,6 +2532,27 @@ int SceneRun(void)
 
             case SDL_KEYUP:
                 result = ituSceneUpdate(&theScene, ITU_EVENT_KEYUP, ev.key.keysym.sym, 0, 0);
+				unsigned long t_curr = 0;
+				struct timeval t_time = { 0 };
+				switch (ev.key.keysym.sym)
+				{
+				//放开后是否长按
+				case 1073741883:
+					get_rtc_time(&t_time, NULL);
+					t_curr = t_time.tv_sec - curtime.tv_sec;
+					if (t_curr >= 2){
+						printf("long press\n");
+						if (curr_node_widget->long_press_cb)
+							curr_node_widget->long_press_cb(curr_node_widget, 1);
+					}
+					else{
+						printf("ok\n");
+						curr_node_widget->confirm_cb(curr_node_widget, 2);
+					}
+
+					break;
+				}
+
                 break;
 
             case SDL_MOUSEMOTION:

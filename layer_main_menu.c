@@ -245,6 +245,11 @@ static void yureshezhiLayer()
 	get_rtc_time(&curr_time, NULL);
 	t_tm = localtime(&curr_time);
 
+	//设置回水温差
+	t_widget = ituSceneFindWidget(&theScene, "Text3");
+	sprintf(t_buf, "%02d", yingxue_base.huishui_temp);
+	ituTextSetString(t_widget, t_buf);
+
 	//设置小时
 	t_widget = ituSceneFindWidget(&theScene, "Text42");
 	sprintf(t_buf, "%02d", t_tm->tm_hour);
@@ -467,7 +472,7 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 
 	//welcome页面
 	if (strcmp(widget->name, "welcom") == 0){
-		ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
+		
 	}
 	//MainLayer 首页
 	else if (strcmp(widget->name, "MainLayer") == 0){
@@ -531,6 +536,14 @@ bool MainLayerOnTimer(ITUWidget* widget, char* param)
 			}
 			//时间归零
 			memset(&during_tm, 0, sizeof(struct timeval));
+			//初始化
+			yingxue_base.adjust_temp_state = 0;
+			is_shake = 0;
+			//显示出水温度
+			sprintf(t_buf, "%d", yingxue_base.chushui_temp);
+			ituWidgetSetVisible(t_widget, true);
+			t_widget = ituSceneFindWidget(&theScene, "Text17");
+			ituTextSetString(t_widget, t_buf);
 		}
 		else{
 			if (t_widget){
@@ -598,7 +611,6 @@ bool MainLayerOnTimer(ITUWidget* widget, char* param)
 //开机画面定时器
 bool WelcomeOnTimer(ITUWidget* widget, char* param)
 {
-	return true;
 	//是否已经动作
 	static unsigned char flag;
 	//第一次上电
