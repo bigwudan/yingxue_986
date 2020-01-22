@@ -2444,6 +2444,7 @@ int SceneRun(void)
             case SDL_KEYDOWN:
                 ScreenSaverRefresh();
                 result = ituSceneUpdate(&theScene, ITU_EVENT_KEYDOWN, ev.key.keysym.sym, 0, 0);
+				printf("down_key=%lu\n", ev.key.keysym.sym);
                 switch (ev.key.keysym.sym)
                 {
 				//真实控制板按键
@@ -2532,6 +2533,7 @@ int SceneRun(void)
 
             case SDL_KEYUP:
                 result = ituSceneUpdate(&theScene, ITU_EVENT_KEYUP, ev.key.keysym.sym, 0, 0);
+				printf("keyup_key=%lu\n", ev.key.keysym.sym);
 				unsigned long t_curr = 0;
 				struct timeval t_time = { 0 };
 				switch (ev.key.keysym.sym)
@@ -2541,15 +2543,18 @@ int SceneRun(void)
 					get_rtc_time(&t_time, NULL);
 					t_curr = t_time.tv_sec - curtime.tv_sec;
 					if (t_curr >= 2){
-						printf("long press\n");
 						if (curr_node_widget->long_press_cb)
 							curr_node_widget->long_press_cb(curr_node_widget, 1);
 					}
 					else{
-						printf("ok\n");
 						curr_node_widget->confirm_cb(curr_node_widget, 2);
 					}
 
+					break;
+				case 1073741886:
+					//出厂设置
+					printf("factory set\n");
+					ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
 					break;
 				}
 
