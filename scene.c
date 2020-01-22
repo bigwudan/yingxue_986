@@ -1819,6 +1819,10 @@ static void* UartFunc(void* arg)
 			process_data(&uart_data, &chain_list);
 			//已经完成
 			if (uart_data.state == 2){
+
+				LOG_RECE_UART(uart_data.buf_data);
+				printf("\n\n");
+
 				//打印结束
 				is_has = 0;
 				uart_data.state = 0;
@@ -2393,7 +2397,7 @@ int SceneRun(void)
 		over_time_process();
 
 		//判断是否有错误代码
-		if (yingxue_base.is_err){
+		/*if (yingxue_base.is_err){
 			if (yingxue_base.err_no == 0xe0){
 				ituLayerGoto(ituSceneFindWidget(&theScene, "E0Layer"));
 			}
@@ -2428,7 +2432,7 @@ int SceneRun(void)
 				ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
 			}
 
-		}
+		}*/
 
 		//判断是否定时任务需要发送数据
 		run_time_task();
