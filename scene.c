@@ -1648,9 +1648,12 @@ static void over_time_process()
 			is_shake = 1;
 		}
 		else{
-			if (strcmp(curr_node_widget->name, "BackgroundButton3") != 0){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+			if (curr_node_widget){
+				if (strcmp(curr_node_widget->name, "BackgroundButton3") != 0){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+				}
 			}
+
 		}
 	}
 	return;
@@ -2520,15 +2523,22 @@ int SceneRun(void)
 				//真实控制板按键
 					//case SDLK_UP:
 				case 1073741884:
+					if (curr_node_widget){
+						curr_node_widget->updown_cb(curr_node_widget, 0);
+					}
 					
-					curr_node_widget->updown_cb(curr_node_widget, 0);
 					break;
 				case 1073741889:
 					//case SDLK_DOWN:
-					curr_node_widget->updown_cb(curr_node_widget, 1);
+					if (curr_node_widget){
+						curr_node_widget->updown_cb(curr_node_widget, 1);
+					}
+					
 					break;
 				case 1073741883:
-					get_rtc_time(&curtime, NULL);
+					if (curr_node_widget){
+						get_rtc_time(&curtime, NULL);
+					}
 					//确定
 					break;
 				//关机
@@ -2616,21 +2626,27 @@ int SceneRun(void)
 				{
 				//放开后是否长按
 				case 1073741883:
-					get_rtc_time(&t_time, NULL);
-					t_curr = t_time.tv_sec - curtime.tv_sec;
-					if (t_curr >= 2){
-						if (curr_node_widget->long_press_cb)
-							curr_node_widget->long_press_cb(curr_node_widget, 1);
+
+					if (curr_node_widget){
+						get_rtc_time(&t_time, NULL);
+						t_curr = t_time.tv_sec - curtime.tv_sec;
+						if (t_curr >= 2){
+							if (curr_node_widget->long_press_cb)
+								curr_node_widget->long_press_cb(curr_node_widget, 1);
+						}
+						else{
+							curr_node_widget->confirm_cb(curr_node_widget, 2);
+						}
 					}
-					else{
-						curr_node_widget->confirm_cb(curr_node_widget, 2);
-					}
+
 
 					break;
 				case 1073741886:
 					//出厂设置
-					printf("factory set\n");
-					ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
+					if (curr_node_widget){
+						ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
+					}
+					
 					break;
 				}
 
