@@ -616,12 +616,20 @@ bool WelcomeOnTimer(ITUWidget* widget, char* param)
 	static unsigned char count;
 	//第一次上电
 	if (yingxue_base.run_state == 0){
-		printf("wudan\n");
-		sleep(2);
-		//开机
-		SEND_OPEN_CMD();
-		yingxue_base.run_state = 1;
-		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+		if (count == 0){
+			//发送开机
+			SEND_OPEN_CMD();
+			printf("send cmd\n");
+			
+		}
+		count++;
+		if (count == 200){
+			printf("goto main\n");
+			yingxue_base.run_state = 1;
+			ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+
+		}
+		printf("count=0x%02x\n", count);
 
 	}
 	//关机
