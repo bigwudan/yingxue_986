@@ -340,22 +340,32 @@ int get_rtc_time(struct  timeval *dst, unsigned char *zone)
 //锁定上下移动
 static void lock_widget_up_down(struct node_widget *widget, unsigned char state)
 {
+	enum style_set { HUISHUI_TEMP, BEIJING_SHIJIAN_H, BEIJING_SHIJIAN_M,CHUSHUI_TEMP };
 	struct ITUWidget *t_widget = NULL;
 	char t_buf[20] = { 0 };
 	int t_num = 0;
+	enum style_set style;
+	//回水温度
 	if (strcmp(widget->name, "Background2") == 0){
+		style = HUISHUI_TEMP;
 		t_widget = ituSceneFindWidget(&theScene, "Text3");
 		t_num = atoi(ituTextGetString((ITUText*)t_widget));
 	}
+	//设置北京时间小时
 	else if (strcmp(widget->name, "Background3") == 0){
+		style = BEIJING_SHIJIAN_H;
 		t_widget = ituSceneFindWidget(&theScene, "Text42");
 		t_num = atoi(ituTextGetString((ITUText*)t_widget));
 	}
+	//设置北京时间分
 	else if (strcmp(widget->name, "Background4") == 0){
+		style = BEIJING_SHIJIAN_M;
 		t_widget = ituSceneFindWidget(&theScene, "Text43");
 		t_num = atoi(ituTextGetString((ITUText*)t_widget));
 	}
+	//设置出水温度
 	else if (strcmp(widget->name, "chushui_Background13") == 0){
+		style = CHUSHUI_TEMP;
 		t_widget = ituSceneFindWidget(&theScene, "Text38");
 		t_num = atoi(ituTextGetString((ITUText*)t_widget));
 	}
@@ -365,6 +375,38 @@ static void lock_widget_up_down(struct node_widget *widget, unsigned char state)
 	else{
 		t_num = t_num - 1;
 	}
+
+	//判断范围
+	//回水温差范围
+	if (style == HUISHUI_TEMP && (t_num < 0 || t_num >= 100)){
+		return;
+	}
+	//设置北京时间
+	else if (style == BEIJING_SHIJIAN_H || style == BEIJING_SHIJIAN_M){
+		//小时0-23
+		if (style == BEIJING_SHIJIAN_H && (t_num < 0 || t_num >= 24)){
+			return;
+		}
+	}
+	else if (style == CHUSHUI_TEMP){
+		//35-50
+		if (yingxue_base.select_set_moshi_mode == 1 && (t_num < 35 || t_num > 50)){
+			return;
+		}
+		else if (yingxue_base.select_set_moshi_mode == 2 && (t_num < 35 || t_num > 65)){
+			return;
+		}
+		else if (yingxue_base.select_set_moshi_mode == 3 && (t_num < 0 || t_num > 42)){
+			return;
+		}
+		else if (yingxue_base.select_set_moshi_mode == 4 && (t_num < 0 || t_num > 38)){
+			return;
+		}
+
+
+	
+	}
+
 	sprintf(t_buf, "%d", t_num);
 	ituTextSetString(t_widget, t_buf);
 }
@@ -501,6 +543,13 @@ static void main_widget_up_down_cb(struct node_widget *widget, unsigned char sta
 			else{
 				count_idx -= 1;
 			}
+
+			//温度范围
+			if (count_idx < 0 || count_idx > 65){
+				return ;
+			}
+
+
 			t_widget = ituSceneFindWidget(&theScene, "Text17");
 			sprintf(t_buf, "%d", count_idx);
 			yingxue_base.shezhi_temp = count_idx;
@@ -1029,6 +1078,20 @@ static void key_down_process()
 	get_rtc_time(&last_down_time, NULL);
 	//更新处理标识
 	is_deal_over_time = 0;
+}
+
+
+//初始化数据,基础数据
+static void yingxue_base_init()
+{
+	memset(&yingxue_base, 0, sizeof(struct yingxue_base_tag));
+
+	yingxue_base.normal_moshi.temp = 37;
+	yingxue_base.super_moshi.temp = 36;
+	yingxue_base.eco_moshi.temp = 35;
+	yingxue_base.fruit_moshi.temp = 34;
+	yingxue_base.shezhi_temp = 35;
+
 }
 
 //控制模块初始化
@@ -2360,7 +2423,10 @@ int SceneRun(void)
 	//现在的时间，长按
 	struct timeval curtime;
 
+	//图形元素初始化
 	node_widget_init();
+	//基础数据初始化
+	yingxue_base_init();
 
     for (;;)
     {
@@ -2465,6 +2531,7 @@ int SceneRun(void)
 					get_rtc_time(&curtime, NULL);
 					//确定
 					break;
+				//关机
 				case 1073741885:
 					if (yingxue_base.run_state == 1){
 						yingxue_base.run_state = 2;
@@ -2481,9 +2548,11 @@ int SceneRun(void)
                     break;
 
                 case SDLK_DOWN:
+					
 					curr_node_widget->updown_cb(curr_node_widget, 1);
                     break;
 				case 13:
+					
 					curr_node_widget->confirm_cb(curr_node_widget, 1);
 					break;
 
@@ -2494,9 +2563,12 @@ int SceneRun(void)
 
                 case SDLK_RIGHT:
                     //长按
-					if (curr_node_widget->long_press_cb){
-						curr_node_widget->long_press_cb(curr_node_widget, NULL);
+					if (curr_node_widget){
+						if (curr_node_widget->long_press_cb){
+							curr_node_widget->long_press_cb(curr_node_widget, NULL);
+						}
 					}
+					
                     break;
 
                 case SDLK_INSERT:

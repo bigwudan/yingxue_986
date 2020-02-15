@@ -616,6 +616,7 @@ bool WelcomeOnTimer(ITUWidget* widget, char* param)
 	static unsigned char count;
 	//第一次上电
 	if (yingxue_base.run_state == 0){
+		printf("wudan\n");
 		sleep(2);
 		//开机
 		SEND_OPEN_CMD();
@@ -634,8 +635,10 @@ bool WelcomeOnTimer(ITUWidget* widget, char* param)
 			count = 0;
 		}
 		else{
-			count += 1;
-			if (count == 10){
+			//count += 1;
+			if (count == 0){
+				count = 1;
+				sleep(2);
 				ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_OFF, NULL);
 			}
 		}
