@@ -278,6 +278,7 @@ unsigned short crc16_ccitt(const char *buf, int len)
 }
 
 
+
 //计算下一次预约的时间
 void calcNextYure(int *beg, int *end)
 {
@@ -286,16 +287,29 @@ void calcNextYure(int *beg, int *end)
 	struct tm *t_tm;
 	unsigned char cur_hour;
 	unsigned char num;
-	*beg = 0;
-	*end = 0;
+	*beg = -1;
+	*end = -1;
 	get_rtc_time(&curr_time, NULL);
 	t_tm = localtime(&curr_time);
 	cur_hour = t_tm->tm_hour;
 	//开始是否找到
 	unsigned char is_beg = 0;
+	//是否开始计数 0 未开始计数 1 开始计数
+	unsigned char is_count = 0;
 
+	//如果当前时间已经开始加热
+	if (*(yingxue_base.dingshi_list + cur_hour) == 1){
+		is_count = 0;
+	}
+	//未开始加热，开始计数
+	else{
+		is_count = 1;
+	}
 	//先向前。如何没有找到从新开始找
 	for (int i = 0; i < 2; i++){
+		//连续预热，中间已经中断 0连续 1已经不连续
+		int continue_flag = 0;
+		//向前查找,起始值应该等于当前时间
 		if (i == 0){
 			num = cur_hour;
 		}
@@ -304,28 +318,49 @@ void calcNextYure(int *beg, int *end)
 		}
 		for (int j = num; j < 24; j++)
 		{
-			//存在时间
-			if (*(yingxue_base.dingshi_list + j) == 1){
-				//开始计算
-				if (is_beg == 0){
-					*beg = j;
-					is_beg = 1;
+
+			//未开始计数，找到下一个起始
+			if (is_count == 0){
+				//连续中,如果有中断，置位
+				if ((continue_flag == 0) && (*(yingxue_base.dingshi_list + j) == 0)){
+					continue_flag = 1;
 				}
-				//结束连续时间一直计算
-				else if (is_beg == 1){
-					*end = j;
+				//不连续中断中，找到一个开始预热
+				else if ((continue_flag == 1) && (*(yingxue_base.dingshi_list + j) == 1)){
+					is_count = 1;
 				}
 			}
-			else{
-				//如果有断层立即结束
-				if (*beg != 0) break;
+			//如果已经计时
+			if (is_count == 1){
+				//存在时间
+				if (*(yingxue_base.dingshi_list + j) == 1){
+					//开始计算
+					if (is_beg == 0){
+						*beg = j;
+						*end = j;
+						is_beg = 1;
+					}
+					//结束连续时间一直计算
+					else if (is_beg == 1){
+						*end = j;
+					}
+				}
+				else{
+					//如果有断层立即结束
+					if (*beg != -1) break;
+				}
 			}
 		}
-		if (*beg != 0) break;
+		if (*beg != -1) break;
 	}
-
+	//如果下次预热时间，开始时间等于当前时间，去掉不显示
+	if (*beg == cur_hour){
+		*beg = -1;
+		*end = -1;
+	}
 	return;
 }
+
 //设置当前时间
 void set_rtc_time(unsigned char hour, unsigned char min)
 {
@@ -361,6 +396,16 @@ int get_rtc_time(struct  timeval *dst, unsigned char *zone)
 	dst->tv_usec = 0;
 	return 1;
 }
+
+//按键时间发生时的触发事件
+static void key_down_process()
+{
+	//最后一次的时间
+	get_rtc_time(&last_down_time, NULL);
+	//更新处理标识
+	is_deal_over_time = 0;
+}
+
 //锁定上下移动
 static void lock_widget_up_down(struct node_widget *widget, unsigned char state)
 {
@@ -783,6 +828,8 @@ static void yure_yureshezhiLayer_widget_confirm_cb(struct node_widget *widget, u
 			widget->state = 0;
 			t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
 			ituWidgetSetVisible(t_widget, false);
+			//设置时间后从新记录一次最后时间
+			key_down_process();
 		}
 	}
 }
@@ -1095,14 +1142,7 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 }
 
 
-//按键时间发生时的触发事件
-static void key_down_process()
-{
-	//最后一次的时间
-	get_rtc_time(&last_down_time, NULL);
-	//更新处理标识
-	is_deal_over_time = 0;
-}
+
 
 
 //初始化数据,基础数据
