@@ -76,7 +76,7 @@ static ITUIcon      *cursorIcon;
 #endif
 
 extern void ScreenSetDoubleClick(void);
-//樱雪
+//樱雪crc效验数组
 static const unsigned short crc16tab[256] = {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
 	0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
@@ -213,15 +213,28 @@ struct timeval last_down_time;
 //环形队列缓存
 struct chain_list_tag chain_list;
 
+/**
+*初始化环形列
+*@param p_chain_list 环形队列指针
+*@return
+*/
 static int create_chain_list(struct chain_list_tag *p_chain_list)
 {
+	//尾
 	p_chain_list->rear = 0;
+	//头
 	p_chain_list->front = 0;
+	//个数
 	p_chain_list->count = 0;
 	memset(p_chain_list->buf, 0, sizeof(p_chain_list->buf));
 	return 0;
 }
-
+/**
+*进入环形队列
+*@param p_chain_list 环形队列指针
+*@param src 入队数据
+*@return 0满 1成功
+*/
 static int in_chain_list(struct chain_list_tag *p_chain_list, unsigned char src)
 {
 	int position = (p_chain_list->rear + 1) % MAX_CHAIN_NUM;
@@ -233,7 +246,12 @@ static int in_chain_list(struct chain_list_tag *p_chain_list, unsigned char src)
 	p_chain_list->rear = position;
 	return 1;
 }
-
+/**
+*出环形队列
+*@param p_chain_list 环形队列指针
+*@param src 出队数据
+*@return 0空 1成功
+*/
 static int out_chain_list(struct chain_list_tag *p_chain_list, unsigned char *src)
 {
 	//空
@@ -244,6 +262,12 @@ static int out_chain_list(struct chain_list_tag *p_chain_list, unsigned char *sr
 	p_chain_list->front = (p_chain_list->front + 1) % MAX_CHAIN_NUM;
 	return 1;
 }
+/**
+*CRC效验
+*@param buf 目标数据
+*@param len 数据长度
+*@return 返回CRC数据
+*/
 unsigned short crc16_ccitt(const char *buf, int len)
 {
 	register int counter;
@@ -1698,11 +1722,18 @@ void processCmdToCtrData(unsigned char cmd, unsigned char data_1,
 }
 
 
-//分析数据
+/*
+从缓存中获取数据，并且分析帧数据
+@param dst 从缓存中获取一帧完整的数据
+@param p_chain_list 缓存队列
+@return
+*/
 unsigned char
 process_data(struct uart_data_tag *dst, struct chain_list_tag *p_chain_list)
 {
+	//错误标识
 	unsigned char flag = 0;
+	//crc验证
 	unsigned short crc = 0;
 	unsigned char buf = 0;
 
@@ -1719,7 +1750,6 @@ process_data(struct uart_data_tag *dst, struct chain_list_tag *p_chain_list)
 			dst->buf_data[dst->count++] = buf;
 			//接受完17个数据 结束
 			if (dst->count == 17){
-				//检查crc 
 				//检查crc 
 				crc = crc16_ccitt(dst->buf_data + 1, 14);
 				if (((unsigned char)(crc >> 8) == dst->buf_data[15]) &&
@@ -1749,8 +1779,12 @@ process_data(struct uart_data_tag *dst, struct chain_list_tag *p_chain_list)
 	}
 	return 0;
 }
-//ok
-//分析得到的数组
+/*
+分析串口帧数据
+@param dst 目标数据，分析一帧结束后，所存入的数据
+@param p_chain_list 缓存队列
+@return
+*/
 void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src)
 {
 	unsigned char *old = NULL;
@@ -1797,7 +1831,7 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 		dst->wind_rate = *(old + 10);
 	}
 	else if (idx == 0x01){
-	
+		//无需解析
 	}
 	else if (idx == 0x02){
 		//[2][0] 当前气源号
@@ -2535,30 +2569,22 @@ int SceneRun(void)
 					}
 					
 					break;
+				//确定
 				case 1073741883:
 					if (curr_node_widget){
 						get_rtc_time(&curtime, NULL);
 					}
-					//确定
 					break;
 				//关机
 				case 1073741885:
-					if (yingxue_base.run_state == 1){
-						yingxue_base.run_state = 2;
-					}
-					else{
-						yingxue_base.run_state = 1;
-					}
-					ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
+					get_rtc_time(&curtime, NULL);
 					break;
-
 				//键盘按键
                 case SDLK_UP:
 					curr_node_widget->updown_cb(curr_node_widget, 0);
                     break;
 
                 case SDLK_DOWN:
-					
 					curr_node_widget->updown_cb(curr_node_widget, 1);
                     break;
 				case 13:
@@ -2628,8 +2654,7 @@ int SceneRun(void)
 				case 1073741883:
 
 					if (curr_node_widget){
-						get_rtc_time(&t_time, NULL);
-						t_curr = t_time.tv_sec - curtime.tv_sec;
+						LONG_PRESS_TIME(t_time, curtime, t_curr);
 						if (t_curr >= 2){
 							if (curr_node_widget->long_press_cb)
 								curr_node_widget->long_press_cb(curr_node_widget, 1);
@@ -2638,8 +2663,20 @@ int SceneRun(void)
 							curr_node_widget->confirm_cb(curr_node_widget, 2);
 						}
 					}
-
-
+					break;
+					//放开关机长按
+				case 1073741885:
+					LONG_PRESS_TIME(t_time, curtime, t_curr);
+					//长按
+					if (t_curr >= 2){
+						if (yingxue_base.run_state == 1){
+							yingxue_base.run_state = 2;
+						}
+						else{
+							yingxue_base.run_state = 1;
+						}
+						ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
+					}
 					break;
 				case 1073741886:
 					//出厂设置
