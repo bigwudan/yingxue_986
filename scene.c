@@ -1920,6 +1920,8 @@ static unsigned char win_test()
 //线程串口回调函数
 static void* UartFunc(void* arg)
 {
+	//记录当前时间
+	struct   timeval rev_time;
 	//主线程发送消息队列
 	struct main_pthread_mq_tag main_pthread_mq;
 	//缓存数据
@@ -1940,8 +1942,10 @@ static void* UartFunc(void* arg)
 	//默认应答
 	uint8_t texBufArray[11] = { 0 };
 	uint8_t backBufArray[11] = { 0xEB, 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xD8, 0x2A };
-	
+	//初始化时间
+	get_rtc_time(&rev_time, NULL);
 	while (1){
+
 		memset(rece_buf, 0, sizeof(rece_buf));
 		//如果是win虚拟测试
 #ifdef _WIN32
@@ -1952,6 +1956,8 @@ static void* UartFunc(void* arg)
 #endif
 		//如果串口有数据
 		if (len > 0){
+			//记录当前收到数据的时间
+			get_rtc_time(&rev_time, NULL);
 			//写入环形缓存
 			for (int i = 0; i < len; i++){
 				flag = in_chain_list(&chain_list, rece_buf[i]);
@@ -1960,8 +1966,8 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 
-				LOG_RECE_UART(uart_data.buf_data);
-				printf("\n\n");
+				//LOG_RECE_UART(uart_data.buf_data);
+				//printf("\n\n");
 
 				//打印结束
 				is_has = 0;
@@ -1994,6 +2000,22 @@ static void* UartFunc(void* arg)
 					write(UART_PORT, backBufArray, sizeof(texBufArray));
 				}
 			}
+		}
+		else{
+			struct timeval nodata_time;
+			get_rtc_time(&nodata_time, NULL);
+
+			//测试
+			printf("rev=%lu,rev=%lu,", rev_time.tv_sec, rev_time.tv_sec);
+
+			printf("no_time=%lu,no_time=%lu\r\n", nodata_time.tv_sec, nodata_time.tv_sec);
+
+			if ((nodata_time.tv_sec - rev_time.tv_sec) > 60){
+				printf("over time\n");
+			}
+
+
+		
 		}
 	}
 
@@ -2451,6 +2473,29 @@ static void CheckMouse(void)
 
 #endif // defined(CFG_USB_MOUSE) || defined(_WIN32)
 
+unsigned long
+my_mktime(const unsigned int year0, const unsigned int mon0,
+const unsigned int day, const unsigned int hour,
+const unsigned int min, const unsigned int sec)
+{
+	unsigned int mon = mon0, year = year0;
+
+	/* 1..12 -> 11,12,1..10 */
+	if (0 >= (int)(mon -= 2)) {
+		mon += 12;	/* Puts Feb last since it has leap day */
+		year -= 1;
+	}
+
+	return ((((unsigned long)
+		(year / 4 - year / 100 + year / 400 + 367 * mon / 12 + day) +
+		year * 365 - 719499
+		) * 24 + hour /* now have hours */
+		) * 60 + min /* now have minutes */
+		) * 60 + sec; /* finally seconds */
+}
+
+
+
 
 
 int SceneRun(void)
@@ -2507,7 +2552,6 @@ int SceneRun(void)
 
     for (;;)
     {
-		
         bool result = false;
 
         if (CheckQuitValue())
