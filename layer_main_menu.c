@@ -688,6 +688,7 @@ bool ERROnTimer(ITUWidget* widget, char* param)
 {
 	sleep(2);
 	if (yingxue_base.is_err == 0){
+		printf("err =0\r\n");
 		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
 	}
 	return true;

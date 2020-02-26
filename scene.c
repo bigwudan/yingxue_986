@@ -1155,6 +1155,7 @@ static void yingxue_base_init()
 	yingxue_base.eco_moshi.temp = 35;
 	yingxue_base.fruit_moshi.temp = 34;
 	yingxue_base.shezhi_temp = 35;
+	yingxue_base.is_err = 0;
 
 }
 
@@ -1869,6 +1870,9 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 		dst->err_no = *(old + 8);
 		//风机转速[0][10]
 		dst->wind_rate = *(old + 10);
+
+		//test
+		dst->is_err = 0;
 	}
 	else if (idx == 0x01){
 		//无需解析
@@ -2004,14 +2008,17 @@ static void* UartFunc(void* arg)
 		else{
 			struct timeval nodata_time;
 			get_rtc_time(&nodata_time, NULL);
-
 			//测试
-			printf("rev=%lu,rev=%lu,", rev_time.tv_sec, rev_time.tv_sec);
-
-			printf("no_time=%lu,no_time=%lu\r\n", nodata_time.tv_sec, nodata_time.tv_sec);
-
-			if ((nodata_time.tv_sec - rev_time.tv_sec) > 60){
+			//printf("rev=%lu,rev=%lu,", rev_time.tv_sec, rev_time.tv_sec);
+			//printf("no_time=%lu,no_time=%lu\r\n", nodata_time.tv_sec, nodata_time.tv_sec);
+			if ((nodata_time.tv_sec - rev_time.tv_sec) > 30){
 				printf("over time\n");
+				//发送错误信息
+				memset(&tm, 0, sizeof(struct timespec));
+				tm.tv_sec = 1;
+				child_to_pthread_mq.is_err = 1;
+				child_to_pthread_mq.err_no = 0xEC;
+				mq_timedsend(childQueue, &child_to_pthread_mq, sizeof(struct child_to_pthread_mq_tag), 1, &tm);
 			}
 
 
@@ -2582,6 +2589,17 @@ int SceneRun(void)
 
 		//樱雪
 		over_time_process();
+		//判断是否定时任务需要发送数据，并且接受子线程的数据
+		run_time_task();
+		if (yingxue_base.is_err){
+
+			if (yingxue_base.err_no == 0xEC){
+				printf("show err\r\n");
+				ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
+			}
+		}
+
+
 
 		//判断是否有错误代码
 		/*if (yingxue_base.is_err){
@@ -2621,8 +2639,7 @@ int SceneRun(void)
 
 		}*/
 
-		//判断是否定时任务需要发送数据
-		run_time_task();
+
 
 #ifdef CFG_LCD_ENABLE
         while (SDL_PollEvent(&ev))
