@@ -1970,8 +1970,8 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 
-				//LOG_RECE_UART(uart_data.buf_data);
-				//printf("\n\n");
+				LOG_RECE_UART(uart_data.buf_data);
+				printf("\n\n");
 
 				//打印结束
 				is_has = 0;
@@ -1994,7 +1994,7 @@ static void* UartFunc(void* arg)
 				if (is_has){
 					struct timeval t_tm;
 					get_rtc_time(&t_tm, NULL);
-					printf("cur=%lu ", t_tm.tv_sec);
+					printf("cur=%lu ，cur=%lu", t_tm.tv_sec, t_tm.tv_sec);
 					LOG_WRITE_UART(texBufArray);
 					printf("\n\n");
 					write(UART_PORT, texBufArray, sizeof(texBufArray));

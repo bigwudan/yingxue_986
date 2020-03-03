@@ -1,0 +1,90 @@
+﻿#ifndef YINGXUE_WIFI_H
+#define YINGXUE_WIFI_H
+#include <stdint.h>
+#define WIFI 1
+
+//最大缓存数
+#define MAX_CACHE_NUM 255
+#define MAX_FRAME_NUM 255
+
+//回复命令成功
+#define BACK_COMMAND_SUCCESS(COMMADN_ID, STATE)
+
+
+
+//101	开关键
+#define WIFI_CTR_OPEN 101
+
+//102	模式
+#define WIFI_CTR_MODE 102
+
+//103	设置温度
+#define WIFI_CTR_TEMP 103
+
+//104	设置出水量
+#define WIFI_CTR_CHUSHUI 104
+
+//105	手动预约模式
+#define WIFI_CTR_SHOUDONG 105
+
+//106	回水温差
+#define WIFI_CTR_HUISHUI 106
+
+//107	状态
+#define WIFI_CTR_STATE 107
+
+//108	预约开关
+#define WIFI_CTR_YUYUE_SW 108
+
+
+//109	预约时间点设置
+#define WIFI_CTR_YUTIME 109
+
+
+
+#define CLEAN_WIFI_CACHE(x) do{x->idx = 0; x->data_len = 0;}while(0)
+
+//得到验证
+#define GET_CHECK_VAL(wifi_cache, check_no)  do{ \
+  for (int i = 0; i < wifi_cache->idx - 1; i++){ \
+	check_no = (uint8_t)((check_no + wifi_cache->data[i]) & 0xff); \
+  }    }while(0)
+
+//定义缓存
+struct wifi_cache_tag
+{
+	uint8_t data[MAX_CACHE_NUM];
+	uint8_t idx; //当前缓存的索引
+	uint16_t data_len; //数据帧的长度
+
+};
+
+//接受到数据帧
+struct wifi_frame_tag
+{
+	uint8_t data[MAX_FRAME_NUM];//数据域
+	uint16_t data_len;//数据长度
+	uint8_t command; // 命令
+
+};
+
+enum wifi_command_state
+{
+	WIFI_CMD_EQUIP_UP = 0x02, //设备信息上报
+	WIFI_CMD_NET = 0x08, //配网命令
+	WIFI_CMD_STATE_UP = 0x05, //状态上报 
+	WIFI_CMD_HEART = 0x03, //心跳
+	WIFI_CMD_STATE_QUERY = 0x04, //状态查询
+	WIFI_CMD_STATE_CTR = 0x07, //状态控制 
+	WIFI_CMD_STATE_ERR = 0x09, //故障上报 
+	WIFI_CMD_STATE_OK = 0x00 //接收确认（Ack） 
+};
+
+//WiFi串口发送数据
+//主线程通过消息队列传送数据
+struct wifi_uart_mq_tag{
+	uint8_t data[60];   //需要发送的数据
+	uint16_t  len;			// 需要发送数据的长度
+};
+
+#endif
