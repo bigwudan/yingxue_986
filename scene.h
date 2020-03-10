@@ -242,7 +242,7 @@ struct uart_data_tag{
 #define UART_PORT       ITP_DEVICE_UART3
 #define UART_DEVICE     itpDeviceUart3	
 
-#define UART_PORT_WIFI       ITP_DEVICE_UART1
+#define UART_PORT_WIFI       ITP_DEVICE_UART3
 #define UART_DEVICE_WIFI     itpDeviceUart1	
 #define MAX_CHAIN_NUM 50
 

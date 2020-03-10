@@ -72,7 +72,7 @@ yingxue_wifi_data_check(struct wifi_cache_tag *wifi_cache, struct wifi_frame_tag
 	GET_CHECK_VAL(wifi_cache, check_no);
 
 	//验证码错误
-	if (  0 && check_no != p_data[wifi_cache->idx - 1]){
+	if (check_no != p_data[wifi_cache->idx - 1]){
 		CLEAN_WIFI_CACHE(wifi_cache);
 		return 0;
 	}
@@ -120,30 +120,35 @@ yingxue_wifi_data_from_wifi()
 #else
 	//串口,读取一个字节
 	len = read(UART_PORT_WIFI, rece_buf, 1);
-
 #endif
 	//如果接受到数据进入分析
-	if (len){
+	if (len > 0){
 		for (int i = 0; i < len; i++){
-			//写入缓存
-			wifi_cache_g.data[wifi_cache_g.idx] = rece_buf[i];
-			wifi_cache_g.idx += 1;
-			//写入数据长度
-			if (wifi_cache_g.idx == 4){
-				wifi_cache_g.data_len = (wifi_cache_g.data[1] << 8) | (wifi_cache_g.data[2]);
-			}
-			//数据读取完成,头+命令+长度+效验 = 5
-			if (wifi_cache_g.idx == 5 + wifi_cache_g.data_len){
-				//进入数据校正
-				flag = yingxue_wifi_data_check(&wifi_cache_g, &wifi_frame_g);
-			}
-			//超过最大值舍去所有数据
-			if (wifi_cache_g.idx >= MAX_CACHE_NUM){
-				CLEAN_WIFI_CACHE((&wifi_cache_g));
-			}
-			//如果得到一个完整的帧，开始分析帧
-			if (flag == 1){
-				return 1;
+
+			//是否是第一次遇到0xfc
+			if ((wifi_cache_g.idx == 0 && rece_buf[i] == 0xfc) ||
+				(wifi_cache_g.idx  > 0))
+			{
+				//写入缓存
+				wifi_cache_g.data[wifi_cache_g.idx] = rece_buf[i];
+				wifi_cache_g.idx += 1;
+				//写入数据长度
+				if (wifi_cache_g.idx == 4){
+					wifi_cache_g.data_len = (wifi_cache_g.data[1] << 8) | (wifi_cache_g.data[2]);
+				}
+				//数据读取完成,头+命令+长度+效验 = 5
+				if (wifi_cache_g.idx == 5 + wifi_cache_g.data_len){
+					//进入数据校正
+					flag = yingxue_wifi_data_check(&wifi_cache_g, &wifi_frame_g);
+				}
+				//超过最大值舍去所有数据
+				if (wifi_cache_g.idx >= MAX_CACHE_NUM){
+					CLEAN_WIFI_CACHE((&wifi_cache_g));
+				}
+				//如果得到一个完整的帧，开始分析帧
+				if (flag == 1){
+					return 1;
+				}
 			}
 		}
 	}
@@ -498,6 +503,7 @@ yingxue_wifi_send_task()
 void
 yingxue_wifi_senduart(struct wifi_uart_mq_tag *wifi_uart_mq)
 {
+	int len = 0;
 #ifdef _WIN32
 	printf(" time=%d to wifi:", time(NULL));
 	for (int i = 0; i < wifi_uart_mq->len; i++){
@@ -508,7 +514,8 @@ yingxue_wifi_senduart(struct wifi_uart_mq_tag *wifi_uart_mq)
 
 #else
 	//发送串口数据
-	printf(" wifi send:");
+	len = write(UART_PORT_WIFI, wifi_uart_mq->data, wifi_uart_mq->len);
+	printf(" wifi send:%d\n", len);
 	for (int i = 0; i < wifi_uart_mq->len; i++){
 		printf("0x%02X ", wifi_uart_mq->data[i]);
 	}

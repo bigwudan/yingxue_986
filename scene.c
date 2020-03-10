@@ -1957,7 +1957,7 @@ static void* UartFunc(void* arg)
 	//初始化时间
 	get_rtc_time(&rev_time, NULL);
 	while (1){
-
+		continue;
 		memset(rece_buf, 0, sizeof(rece_buf));
 		//如果是win虚拟测试
 #ifdef _WIN32
@@ -1978,8 +1978,8 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 
-				//LOG_RECE_UART(uart_data.buf_data);
-				//printf("\n\n");
+				LOG_RECE_UART(uart_data.buf_data);
+				printf("\n\n");
 
 				//打印结束
 				is_has = 0;
@@ -2002,9 +2002,9 @@ static void* UartFunc(void* arg)
 				if (is_has){
 					struct timeval t_tm;
 					get_rtc_time(&t_tm, NULL);
-					//printf("cur=%lu ，cur=%lu", t_tm.tv_sec, t_tm.tv_sec);
-					//LOG_WRITE_UART(texBufArray);
-					//printf("\n\n");
+					printf("cur=%lu ，cur=%lu", t_tm.tv_sec, t_tm.tv_sec);
+					LOG_WRITE_UART(texBufArray);
+					printf("\n\n");
 					write(UART_PORT, texBufArray, sizeof(texBufArray));
 				}
 				//没有指令就应答
@@ -2593,38 +2593,9 @@ int SceneRun(void)
 	//樱雪初始化
 	//串口
 #ifndef _WIN32
-	//主板通讯串口
-/*	itpRegisterDevice(UART_PORT, &UART_DEVICE);
-	ioctl(UART_PORT, ITP_IOCTL_INIT, NULL);
-	ioctl(UART_PORT, ITP_IOCTL_RESET, (void *)CFG_UART3_BAUDRATE);
 
-	//wifi串口通讯
-	itpRegisterDevice(UART_PORT_WIFI, &UART_DEVICE_WIFI);
-	ioctl(UART_PORT_WIFI, ITP_IOCTL_INIT, NULL);
-	ioctl(UART_PORT_WIFI, ITP_IOCTL_RESET, CFG_UART1_BAUDRATE);*/
 #endif
-	uint8_t backBufArray[11] = { 0xEB, 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xD8, 0x2A };
-	uint8_t rece_buf[10];
-	uint8_t t_num = 0;
-	//测试串口数据
-	while (1){
-		t_num = write(ITP_DEVICE_UART1, backBufArray, sizeof(backBufArray));
-		//t_num = write(ITP_DEVICE_UART2, backBufArray, sizeof(backBufArray));
-		printf("sendxx num=%d\n", t_num);
-		
-		t_num = read(ITP_DEVICE_UART1, rece_buf, sizeof(rece_buf));
 
-		if (t_num > 0){
-			printf("rev num=%d\n", t_num);
-			for (int i = 0; i < t_num; i++){
-				printf("0x%02X ", rece_buf[i]);
-			}
-			printf("end \n");
-		}
-
-		sleep(1);
-	
-	}
 
 	//消息队列
 	//初始化队列
@@ -2651,8 +2622,7 @@ int SceneRun(void)
 
 	//初始化wifi模块
 	yingxue_wifi_init();
-	//测试蜂鸣器
-	test_voice();
+
 
     for (;;)
     {
@@ -2771,6 +2741,9 @@ int SceneRun(void)
 					break;
 				//确定
 				case 1073741883:
+					printf("send wifi_cmd_net\n");
+					yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
+
 					if (curr_node_widget){
 						get_rtc_time(&curtime, NULL);
 					}
