@@ -825,6 +825,10 @@ bool MainLayerOnTimer(ITUWidget* widget, char* param)
 				t_widget = ituSceneFindWidget(&theScene, "Background15");
 				ituWidgetSetVisible(t_widget, true);
 			}
+			else{
+				t_widget = ituSceneFindWidget(&theScene, "Background15");
+				ituWidgetSetVisible(t_widget, false);
+			}
 
 			//Background34
 			if (yingxue_base.state_show & 0x01){

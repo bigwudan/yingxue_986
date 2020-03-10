@@ -2741,9 +2741,6 @@ int SceneRun(void)
 					break;
 				//È·¶¨
 				case 1073741883:
-					printf("send wifi_cmd_net\n");
-					yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
-
 					if (curr_node_widget){
 						get_rtc_time(&curtime, NULL);
 					}
