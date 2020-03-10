@@ -6,7 +6,10 @@
 #include "ctrlboard.h"
 #include "ite/itu.h"
 #include "ite/itp.h"
+#include "yingxue_wifi.h"
 
+//wifi信息
+extern struct wifi_base_tag wifi_base_g;
 
 //当前选中的空间
 extern struct node_widget *curr_node_widget;
@@ -101,6 +104,9 @@ char is_shake;
 static void MainLayer_init()
 {
 	ITUWidget *t_widget = NULL;
+	//隐藏wifi图标
+	t_widget = ituSceneFindWidget(&theScene, "Background15");
+	ituWidgetSetVisible(t_widget, false);
 	//全部隐藏边框
 	t_widget = ituSceneFindWidget(&theScene, "Background100");
 	ituWidgetSetVisible(t_widget, false);
@@ -216,6 +222,233 @@ static void yureshijianLayer()
 	ituWidgetSetVisible(t_widget, true);
 	t_widget = ituSceneFindWidget(&theScene, curr_node_widget->name);
 	ituWidgetSetVisible(t_widget, false);
+	uint8_t *dingshi = yingxue_base.dingshi_list;
+	for (int i = 0; i < 24; i++){
+		//找到对应的数据
+
+		switch (i)
+		{
+		case 0:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox2");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 1:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox5");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 2:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox31");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 3:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox32");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 4:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox59");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 5:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox58");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 6:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox57");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 7:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox56");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 8:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox75");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 9:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox74");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 10:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox73");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 11:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox72");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 12:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox67");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 13:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox66");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 14:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox65");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 15:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox64");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 16:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox92");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 17:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox91");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 18:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox90");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 19:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox89");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 20:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox83");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 21:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox82");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 22:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox81");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		case 23:
+			t_widget = ituSceneFindWidget(&theScene, "RadioBox80");
+			if (dingshi[i] == 0){
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, false);
+			}
+			else{
+				ituCheckBoxSetChecked((ITUCheckBox *)t_widget, true);
+			}
+			break;
+		default:
+			break;
+		}
+
+	}
 
 }
 
@@ -587,6 +820,12 @@ bool MainLayerOnTimer(ITUWidget* widget, char* param)
 			t_widget = ituSceneFindWidget(&theScene, "Text17");
 			ituTextSetString(t_widget, t_buf);
 
+			//显示wifi
+			if (wifi_base_g.online_state & 0x01){
+				t_widget = ituSceneFindWidget(&theScene, "Background15");
+				ituWidgetSetVisible(t_widget, true);
+			}
+
 			//Background34
 			if (yingxue_base.state_show & 0x01){
 				//显示
@@ -626,6 +865,53 @@ bool MainLayerOnTimer(ITUWidget* widget, char* param)
 				ituWidgetSetVisible(t_widget, false);
 			}
 
+
+			//模式 0 常规 1超热 2 eco 3水果
+			t_widget = ituSceneFindWidget(&theScene, "moshiSprite");
+
+			if (yingxue_base.moshi_mode == 0 || yingxue_base.moshi_mode == 1){
+				ituSpriteGoto(t_widget, 0);
+			}
+			else if (yingxue_base.moshi_mode == 2){
+				ituSpriteGoto(t_widget, 1);
+			}
+			else if (yingxue_base.moshi_mode == 3){
+				ituSpriteGoto(t_widget, 2);
+			}
+			else if (yingxue_base.moshi_mode == 4){
+				ituSpriteGoto(t_widget, 3);
+			}
+
+			//预热模式 0 预热 1单巡航 2全天候巡航 3下次预热时间
+			t_widget = ituSceneFindWidget(&theScene, "yureSprite");
+
+			if (yingxue_base.yure_mode == 0){
+				ituSpriteGoto(t_widget, 0);
+			}
+			else if (yingxue_base.yure_mode == 1){
+				ituSpriteGoto(t_widget, 1);
+			}
+			else if (yingxue_base.yure_mode == 2){
+				ituSpriteGoto(t_widget, 2);
+			}
+			else if (yingxue_base.yure_mode == 3){
+				int beg = 0;
+				int end = 0;
+				char t_buf[100] = { 0 };
+				//计算下次预热时间
+				calcNextYure(&beg, &end);
+				if (beg == -1){
+					beg = 0;
+					end = 0;
+					sprintf(t_buf, "%d:00--%d:00", beg, end);
+				}
+				else{
+					sprintf(t_buf, "%d:00--%d:59", beg, end);
+				}
+				ituTextSetString(ituSceneFindWidget(&theScene, "Text35"), t_buf);
+				ituSpriteGoto(t_widget, 3);
+
+			}
 		}
 	}
 	get_rtc_time(&last_tm, NULL);

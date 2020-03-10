@@ -1,6 +1,7 @@
 ﻿#ifndef YINGXUE_WIFI_H
 #define YINGXUE_WIFI_H
 #include <stdint.h>
+#include <sys/time.h>
 #define WIFI 1
 
 //最大缓存数
@@ -48,7 +49,10 @@
 #define GET_CHECK_VAL(wifi_cache, check_no)  do{ \
   for (int i = 0; i < wifi_cache->idx - 1; i++){ \
 	check_no = (uint8_t)((check_no + wifi_cache->data[i]) & 0xff); \
-  }    }while(0)
+    }    }while(0)
+
+//发送指令到wifi模块
+#define WIFI_SEND_UART(data) do{yingxue_wifi_senduart(data);}while(0);
 
 //定义缓存
 struct wifi_cache_tag
@@ -87,4 +91,19 @@ struct wifi_uart_mq_tag{
 	uint16_t  len;			// 需要发送数据的长度
 };
 
+//wifi基础数据结构
+struct wifi_base_tag{
+	uint8_t run_state; //运行状态 0上报状态 1已经上报完成
+	uint8_t ack_state; //ack状态 0未等待状态 1 需要等待ack
+	struct timeval last_send_time; //记录最后一次发送的时间 
+	uint8_t online_state; //wifi状态..Bit[4~7] 配网状态 0=不处于配网状态 1=处于配网状态，Bit[1~3] 信号强度0=无1=弱2=中3=强，Bit[0] 在线状态 0=离线1=在线
+	uint8_t beg_upstate; // 开始上传状态 0未开始 大于0开始，每次减一 101 开机102 模式103 设置温度104 出水量105 手动预约106 回水温差107 状态108 预约开关109 预约时间
+
+};
+//发送任务
+void yingxue_wifi_send_task();
+//wifi模块任务
+void yingxue_wifi_task();
+//串口发送信息
+void yingxue_wifi_senduart(struct wifi_uart_mq_tag *wifi_uart_mq);
 #endif

@@ -11,6 +11,7 @@
 #include "ite/itp.h"
 #include "scene.h"
 #include "ctrlboard.h"
+#include "yingxue_wifi.h"
 
 #ifdef _WIN32
     #include <crtdbg.h>
@@ -75,6 +76,12 @@ static int          periodPerFrame;
 static ITUIcon      *cursorIcon;
 #endif
 
+#ifdef _WIN32
+//定义测试数据
+//发送wifi模块数据
+mqd_t test_mq;
+#endif
+
 extern void ScreenSetDoubleClick(void);
 //樱雪crc效验数组
 static const unsigned short crc16tab[256] = {
@@ -116,7 +123,8 @@ mqd_t uartQueue = -1;
 
 //子线程向主线程发送
 mqd_t childQueue = -1;
-
+//发送wifi模块数据
+mqd_t toWifiQueue = -1;
 
 //是否已经处理超时 0 未处理 1 已经处理
 unsigned char is_deal_over_time;
@@ -1970,8 +1978,8 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 
-				LOG_RECE_UART(uart_data.buf_data);
-				printf("\n\n");
+				//LOG_RECE_UART(uart_data.buf_data);
+				//printf("\n\n");
 
 				//打印结束
 				is_has = 0;
@@ -1994,9 +2002,9 @@ static void* UartFunc(void* arg)
 				if (is_has){
 					struct timeval t_tm;
 					get_rtc_time(&t_tm, NULL);
-					printf("cur=%lu ，cur=%lu", t_tm.tv_sec, t_tm.tv_sec);
-					LOG_WRITE_UART(texBufArray);
-					printf("\n\n");
+					//printf("cur=%lu ，cur=%lu", t_tm.tv_sec, t_tm.tv_sec);
+					//LOG_WRITE_UART(texBufArray);
+					//printf("\n\n");
 					write(UART_PORT, texBufArray, sizeof(texBufArray));
 				}
 				//没有指令就应答
@@ -2012,7 +2020,7 @@ static void* UartFunc(void* arg)
 			//printf("rev=%lu,rev=%lu,", rev_time.tv_sec, rev_time.tv_sec);
 			//printf("no_time=%lu,no_time=%lu\r\n", nodata_time.tv_sec, nodata_time.tv_sec);
 			if ((nodata_time.tv_sec - rev_time.tv_sec) > 30){
-				printf("over time\n");
+				//printf("over time\n");
 				//发送错误信息
 				memset(&tm, 0, sizeof(struct timespec));
 				tm.tv_sec = 1;
@@ -2502,8 +2510,73 @@ const unsigned int min, const unsigned int sec)
 }
 
 
+static void
+mq_init()
+{
+	//消息队列
+	struct mq_attr mq_uart_attr;
+	mq_uart_attr.mq_flags = 0;
+	mq_uart_attr.mq_maxmsg = 10;
+	mq_uart_attr.mq_msgsize = sizeof(struct main_pthread_mq_tag);
+	uartQueue = mq_open("scene_1", O_CREAT | O_NONBLOCK, 0644, &mq_uart_attr);
+
+	struct mq_attr mq_child_attr;
+	mq_child_attr.mq_flags = 0;
+	mq_child_attr.mq_maxmsg = 20;
+
+	mq_child_attr.mq_msgsize = sizeof(struct child_to_pthread_mq_tag);
+	childQueue = mq_open("scene_2", O_CREAT | O_NONBLOCK, 0644, &mq_child_attr);
 
 
+	//发送到wifi模块队列mqd_t toWifiQueue = -1;
+	struct mq_attr mq_wifi_attr;
+	mq_wifi_attr.mq_flags = 0;
+	mq_wifi_attr.mq_maxmsg = 20;
+
+	mq_wifi_attr.mq_msgsize = sizeof(struct wifi_uart_mq_tag);
+	toWifiQueue = mq_open("scene_3", O_CREAT | O_NONBLOCK, 0644, &mq_wifi_attr);
+
+
+#ifdef _WIN32
+	//测试数据结构依据wifi
+	struct mq_attr test_mq_attr;
+	test_mq_attr.mq_flags = 0;
+	test_mq_attr.mq_maxmsg = 20;
+
+	test_mq_attr.mq_msgsize = sizeof(struct wifi_uart_mq_tag);
+	test_mq = mq_open("scene_test", O_CREAT | O_NONBLOCK, 0644, &mq_wifi_attr);
+
+
+#endif
+
+
+}
+
+//测试蜂鸣器
+void test_voice(){
+	printf("beg test\n");
+	int gpioPin = 50;
+	int i = 0;
+	itpInit();
+	//initial GPIO
+	ithGpioSetOut(gpioPin);
+	ithGpioSetMode(gpioPin, ITH_GPIO_MODE0);
+	//
+	while (1)
+	{
+		if (i++ & 0x1)
+		{
+			ithGpioClear(gpioPin);
+		}
+		else
+		{
+			ithGpioSet(gpioPin);
+		}
+		printf("current GPIO[%d] state=%x, index=%d\n", gpioPin, ithGpioGet(gpioPin), i);
+		usleep(1000 * 1000); //wait for 1 second
+	}
+
+}
 
 int SceneRun(void)
 {
@@ -2520,25 +2593,44 @@ int SceneRun(void)
 	//樱雪初始化
 	//串口
 #ifndef _WIN32
-	itpRegisterDevice(UART_PORT, &UART_DEVICE);
+	//主板通讯串口
+/*	itpRegisterDevice(UART_PORT, &UART_DEVICE);
 	ioctl(UART_PORT, ITP_IOCTL_INIT, NULL);
 	ioctl(UART_PORT, ITP_IOCTL_RESET, (void *)CFG_UART3_BAUDRATE);
-#endif
 
+	//wifi串口通讯
+	itpRegisterDevice(UART_PORT_WIFI, &UART_DEVICE_WIFI);
+	ioctl(UART_PORT_WIFI, ITP_IOCTL_INIT, NULL);
+	ioctl(UART_PORT_WIFI, ITP_IOCTL_RESET, CFG_UART1_BAUDRATE);*/
+#endif
+	uint8_t backBufArray[11] = { 0xEB, 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xD8, 0x2A };
+	uint8_t rece_buf[10];
+	uint8_t t_num = 0;
+	//测试串口数据
+	while (1){
+		t_num = write(ITP_DEVICE_UART1, backBufArray, sizeof(backBufArray));
+		//t_num = write(ITP_DEVICE_UART2, backBufArray, sizeof(backBufArray));
+		printf("sendxx num=%d\n", t_num);
+		
+		t_num = read(ITP_DEVICE_UART1, rece_buf, sizeof(rece_buf));
+
+		if (t_num > 0){
+			printf("rev num=%d\n", t_num);
+			for (int i = 0; i < t_num; i++){
+				printf("0x%02X ", rece_buf[i]);
+			}
+			printf("end \n");
+		}
+
+		sleep(1);
+	
+	}
 
 	//消息队列
-	struct mq_attr mq_uart_attr;
-	mq_uart_attr.mq_flags = 0;
-	mq_uart_attr.mq_maxmsg = 10;
-	mq_uart_attr.mq_msgsize = sizeof(struct main_pthread_mq_tag);
-	uartQueue = mq_open("scene_1", O_CREAT | O_NONBLOCK, 0644, &mq_uart_attr);
+	//初始化队列
+	mq_init();
 
-	struct mq_attr mq_child_attr;
-	mq_child_attr.mq_flags = 0;
-	mq_child_attr.mq_maxmsg = 20;
 
-	mq_child_attr.mq_msgsize = sizeof(struct child_to_pthread_mq_tag);
-	childQueue = mq_open("scene_2", O_CREAT | O_NONBLOCK, 0644, &mq_child_attr);
 
 
 	//收发串口线程
@@ -2556,6 +2648,11 @@ int SceneRun(void)
 	node_widget_init();
 	//基础数据初始化
 	yingxue_base_init();
+
+	//初始化wifi模块
+	yingxue_wifi_init();
+	//测试蜂鸣器
+	test_voice();
 
     for (;;)
     {
@@ -2591,13 +2688,13 @@ int SceneRun(void)
 		over_time_process();
 		//判断是否定时任务需要发送数据，并且接受子线程的数据
 		run_time_task();
-		if (yingxue_base.is_err){
+		/*if (yingxue_base.is_err){
 
 			if (yingxue_base.err_no == 0xEC){
 				printf("show err\r\n");
 				ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
 			}
-		}
+		}*/
 
 
 
@@ -2639,6 +2736,8 @@ int SceneRun(void)
 
 		}*/
 
+		//wifi模块通讯
+		yingxue_wifi_task();
 
 
 #ifdef CFG_LCD_ENABLE
@@ -2712,6 +2811,73 @@ int SceneRun(void)
                     break;
 
     #ifdef _WIN32
+
+				case 49: //键盘1 发送ack
+					printf("keypad 1 ack\n");
+					struct wifi_uart_mq_tag test2_mq;
+					test2_mq.data[0] = 0xfc;
+					test2_mq.data[1] = 0x00;
+					test2_mq.data[2] = 0x00;
+					test2_mq.data[3] = 0x00;
+					test2_mq.data[4] = 0xfc;
+					test2_mq.len = 5;
+					mq_timedsend(test_mq, &test2_mq, sizeof(struct wifi_uart_mq_tag), 1, NULL);
+					break;
+				case 50: //键盘2 发送配网
+					printf("keypad 2\n");
+
+					yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
+					break;
+				case 51: //键盘3 发送心跳fc 00 02 03 05 00 06
+					printf("keypad 3\n");
+
+					struct wifi_uart_mq_tag test1_mq;
+					test1_mq.data[0] = 0xfc;
+					test1_mq.data[1] = 0x00;
+					test1_mq.data[2] = 0x02;
+					test1_mq.data[3] = 0x03;
+					test1_mq.data[4] = 0x05;
+					test1_mq.data[5] = 0x00;
+					test1_mq.data[6] = 0x06;
+					test1_mq.len = 7;
+					mq_timedsend(test_mq, &test1_mq, sizeof(struct wifi_uart_mq_tag), 1, NULL);
+					break;
+				case 52: //键盘1 发送数据查询
+					printf("keypad 4\n");
+
+					struct wifi_uart_mq_tag test3_mq;
+					test3_mq.data[0] = 0xfc;
+					test3_mq.data[1] = 0x00;
+					test3_mq.data[2] = 0x00;
+					test3_mq.data[3] = 0x04;
+					test3_mq.data[4] = 0x00;
+
+					test3_mq.len = 5;
+					mq_timedsend(test_mq, &test3_mq, sizeof(struct wifi_uart_mq_tag), 1, NULL);
+					break;
+				case 53: //键盘1 发送命令
+					printf("keypad 5\n");
+					//fc 00 08 07 00 04 00 12 00 00 00 03 24
+					struct wifi_uart_mq_tag test4_mq;
+					test4_mq.data[0] = 0xfc;
+					test4_mq.data[1] = 0x00;
+					test4_mq.data[2] = 0x08;
+					test4_mq.data[3] = 0x07;
+					test4_mq.data[4] = 0x00;
+					test4_mq.data[5] = 0x04;
+					test4_mq.data[6] = 0x00;
+					test4_mq.data[7] = 0x6d;//命令id
+					test4_mq.data[8] = 0x00;
+					test4_mq.data[9] = 0x00;
+					test4_mq.data[10] = 0x00;
+					test4_mq.data[11] = 0x12;//命令数
+					test4_mq.data[12] = 0x24;
+
+
+
+					test4_mq.len = 13;
+					mq_timedsend(test_mq, &test4_mq, sizeof(struct wifi_uart_mq_tag), 1, NULL);
+					break;
                 case SDLK_e:
                     result |= ituSceneUpdate(&theScene, ITU_EVENT_TOUCHPINCH, 20, 30, 40);
                     break;
