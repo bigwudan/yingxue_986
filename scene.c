@@ -1957,7 +1957,7 @@ static void* UartFunc(void* arg)
 	//初始化时间
 	get_rtc_time(&rev_time, NULL);
 	while (1){
-		continue;
+
 		memset(rece_buf, 0, sizeof(rece_buf));
 		//如果是win虚拟测试
 #ifdef _WIN32
@@ -1966,8 +1966,12 @@ static void* UartFunc(void* arg)
 #else
 		len = read(UART_PORT, rece_buf, sizeof(rece_buf));
 #endif
+		
 		//如果串口有数据
 		if (len > 0){
+
+
+
 			//记录当前收到数据的时间
 			get_rtc_time(&rev_time, NULL);
 			//写入环形缓存
@@ -2595,6 +2599,30 @@ int SceneRun(void)
 #ifndef _WIN32
 
 #endif
+	/*uint8_t test_buf[] = {0x11, 0x22, 0x33};
+	uint8_t test_read[17] = { 0 };
+	uint8_t test_len = 0;
+	//测试
+	while (1){
+		
+
+		test_len = write(UART_PORT_WIFI, test_buf, sizeof(test_buf));
+		printf("send test_len=%d\n", test_len);
+
+		test_len = read(UART_PORT_WIFI, test_read, sizeof(test_read));
+		if (test_len > 0){
+		
+			printf("beg start:");
+			for (int i = 0; i < test_len; i++){
+				printf(" 0x%02X ", test_read[i]);
+			}
+			printf("end \n");
+		}
+
+
+		sleep(2);
+	}*/
+
 
 
 	//消息队列
@@ -2662,13 +2690,13 @@ int SceneRun(void)
 		over_time_process();
 		//判断是否定时任务需要发送数据，并且接受子线程的数据
 		run_time_task();
-		/*if (yingxue_base.is_err){
+		if (yingxue_base.is_err){
 
 			if (yingxue_base.err_no == 0xEC){
 				printf("show err\r\n");
 				ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
 			}
-		}*/
+		}
 
 
 
