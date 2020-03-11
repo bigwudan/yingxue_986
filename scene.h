@@ -182,6 +182,7 @@ struct yingxue_base_tag{
 	unsigned char ph_num;//[2][1]
 	unsigned char ne_num;//[2][4]
 	unsigned char huishui_temp_1;//[3][1] 回水温度 显示的回水温度
+	struct timeval cache_time; //每次轮询的缓存时间
 };
 
 
@@ -256,6 +257,8 @@ struct uart_data_tag{
 //结束预热
 #define SEND_CLOSE_YURE_CMD() do{sendCmdToCtr(0x09, 0x00, 0x00, yingxue_base.huishui_temp, 0x00, STOP_YURE);}while(0)
 
+//获得缓存时间
+#define get_rtc_cache_time(now_t, NULL) memmove(now_t, &yingxue_base.cache_time, sizeof(struct timeval))
 
 
 //环形队列

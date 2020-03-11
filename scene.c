@@ -409,7 +409,7 @@ int get_rtc_time(struct  timeval *dst, unsigned char *zone)
 static void key_down_process()
 {
 	//最后一次的时间
-	get_rtc_time(&last_down_time, NULL);
+	get_rtc_cache_time(&last_down_time, NULL);
 	//更新处理标识
 	is_deal_over_time = 0;
 }
@@ -1708,7 +1708,7 @@ extern char is_shake;
 static void over_time_process()
 {
 	struct timeval now_t = { 0 };
-	get_rtc_time(&now_t, NULL);
+	get_rtc_cache_time(&now_t, NULL);
 	//已经处理过
 	if (is_deal_over_time == 1) return;
 	//如何当前的时间大于3秒
@@ -2045,7 +2045,7 @@ static void run_time_task()
 {
 	struct tm *tm_t;
 	struct   timeval tm;
-	get_rtc_time(&tm, NULL);
+	get_rtc_cache_time(&tm, NULL);
 	tm_t = localtime(&tm.tv_sec);
 	struct child_to_pthread_mq_tag child_to_pthread_mq_tag;
 	int flag = 0;
@@ -2655,6 +2655,10 @@ int SceneRun(void)
 #endif     // FPS_ENABLE
 
 		//樱雪
+
+		//缓存时间
+		get_rtc_time(&yingxue_base.cache_time, NULL);
+		//任务超时
 		over_time_process();
 		//判断是否定时任务需要发送数据，并且接受子线程的数据
 		run_time_task();
@@ -2742,12 +2746,12 @@ int SceneRun(void)
 				//确定
 				case 1073741883:
 					if (curr_node_widget){
-						get_rtc_time(&curtime, NULL);
+						get_rtc_cache_time(&curtime, NULL);
 					}
 					break;
 				//关机
 				case 1073741885:
-					get_rtc_time(&curtime, NULL);
+					get_rtc_cache_time(&curtime, NULL);
 					break;
 				//键盘按键
                 case SDLK_UP:

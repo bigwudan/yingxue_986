@@ -89,6 +89,8 @@ yingxue_wifi_data_check(struct wifi_cache_tag *wifi_cache, struct wifi_frame_tag
 
 	//打印
 	printf("wifi rec:");
+
+	printf("cmd=0x%02X,data=", wifi_frame->command);
 	for (int i = 0; i < wifi_frame->data_len; i++){
 		printf("0x%02X ", wifi_frame->data[i]);
 	}
@@ -279,7 +281,7 @@ void yingxue_wifi_to_wifi(enum wifi_command_state cmd_state, uint16_t state_id, 
 	struct timespec tm;
 	memset(&tm, 0, sizeof(struct timespec));
 	tm.tv_sec = 1;
-	wifi_uart_mq.len = 0;
+	memset(&wifi_uart_mq, 0, sizeof(struct wifi_uart_mq_tag));
 	//发送配网指令
 	if (cmd_state == WIFI_CMD_EQUIP_UP){
 
@@ -316,6 +318,7 @@ void yingxue_wifi_to_wifi(enum wifi_command_state cmd_state, uint16_t state_id, 
 		for (int i = 0; i < 12; i++){
 			wifi_uart_mq.data[12] = (uint8_t)((wifi_uart_mq.data[12] + wifi_uart_mq.data[i]) & 0xff);
 		}
+		wifi_uart_mq.data[12] = 0x73;
 		wifi_uart_mq.len = 13;
 
 	}
@@ -377,6 +380,9 @@ yingxue_wifi_task()
 		//状态查询
 		else if (wifi_frame_g.command == WIFI_CMD_STATE_QUERY){
 			wifi_base_g.beg_upstate = 9;
+			//回复ack
+			yingxue_wifi_to_wifi(WIFI_CMD_STATE_OK, 0, 0);
+
 		}
 		//状态控制
 		else if (wifi_frame_g.command == WIFI_CMD_STATE_CTR){
@@ -455,6 +461,8 @@ yingxue_wifi_upstate()
 		else if (yingxue_base.run_state == 2){
 			cmd_data = 0;
 		}
+		//测试开机
+		cmd_data = 1;
 		yingxue_wifi_to_wifi(WIFI_CMD_STATE_UP, 101, cmd_data);
 
 	}
@@ -470,7 +478,7 @@ yingxue_wifi_send_task()
 	//现在的时间
 	struct timeval curtime;
 	struct wifi_uart_mq_tag wifi_uart_mq;
-	get_rtc_time(&curtime, NULL);
+	get_rtc_cache_time(&curtime, NULL);
 	//上传设备信息,未收到信号两秒钟发送一次
 	if (wifi_base_g.run_state == 0 && (curtime.tv_sec - wifi_base_g.last_send_time.tv_sec) > 2){
 		yingxue_wifi_to_wifi(WIFI_CMD_EQUIP_UP, 0, 0);
