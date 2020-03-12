@@ -2591,6 +2591,18 @@ void buzzer_voice()
 	ithGpioSetMode(BUZZER, ITH_GPIO_MODE0);
 }
 
+static void
+polling_layer()
+{
+	if (yingxue_base.curr_layer == WELCOM){
+		polling_welcom();
+	}
+	else if (yingxue_base.curr_layer == MAINLAYER){
+		polling_main();
+	}
+
+}
+
 int SceneRun(void)
 {
     SDL_Event   ev;
@@ -2693,9 +2705,12 @@ int SceneRun(void)
 #endif     // FPS_ENABLE
 
 		//樱雪
-
 		//缓存时间
 		get_rtc_time(&yingxue_base.cache_time, NULL);
+
+		//进入页面轮询
+		polling_layer();
+
 		//任务超时
 		over_time_process();
 		//判断是否定时任务需要发送数据，并且接受子线程的数据
@@ -2806,10 +2821,18 @@ int SceneRun(void)
 					
 					curr_node_widget->confirm_cb(curr_node_widget, 1);
 					break;
-
+               //关机
                 case SDLK_LEFT:
                     //ituSceneSendEvent(&theScene, EVENT_CUSTOM_KEY2, NULL);
-					printf("curr=%s\n", curr_node_widget->name);
+					//printf("curr=%s\n", curr_node_widget->name);
+					if (yingxue_base.run_state == 1){
+						yingxue_base.run_state = 2;
+					}
+					else{
+						yingxue_base.run_state = 1;
+					}
+					ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
+
                     break;
 
                 case SDLK_RIGHT:

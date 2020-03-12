@@ -127,6 +127,14 @@ enum main_pthread_mq_state
 	SET_CHUCHANG //出厂设置
 };
 
+//当前显示的页面
+enum CURR_LAYER
+{
+	WELCOM, MAINLAYER, YURELAYER, YURESHIJIANLAYER, YURESHEZHILAYER, MOSHILAYER, CHUSHUI, LAYER1
+
+};
+
+
 //控件结构体
 //控制控件
 struct node_widget
@@ -183,6 +191,8 @@ struct yingxue_base_tag{
 	unsigned char ne_num;//[2][4]
 	unsigned char huishui_temp_1;//[3][1] 回水温度 显示的回水温度
 	struct timeval cache_time; //每次轮询的缓存时间
+	//当前的时间
+	enum CURR_LAYER curr_layer;
 };
 
 
@@ -311,6 +321,10 @@ void sendCmdToCtr(unsigned char cmd, unsigned char data_1, unsigned char data_2,
 //组合数据
 void processCmdToCtrData(unsigned char cmd, unsigned char data_1,
 	unsigned char data_2, unsigned char data_3, unsigned char data_4, unsigned char *dst);
+//欢迎页面轮询
+void polling_welcom();
+
+void polling_main();
 
 #define LOG_WRITE_UART(arr) do{\
 								for(int i=0; i<11;i++) \
