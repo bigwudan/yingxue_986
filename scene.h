@@ -245,6 +245,16 @@ struct uart_data_tag{
 
 #define UART_PORT_WIFI       ITP_DEVICE_UART3
 
+//蜂鸣器
+#define BUZZER  50
+
+//打开蜂鸣器
+#define BUZZER_OPEN() do{ithGpioSet(BUZZER);buzzer_voice_num =  BUZZER_DURING;buzzer_voice_state = 1;}while(0);
+
+//蜂鸣器间隔时间
+#define BUZZER_DURING 3
+
+
 #define MAX_CHAIN_NUM 50
 
 //开机

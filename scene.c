@@ -84,6 +84,11 @@ mqd_t test_mq;
 
 extern void ScreenSetDoubleClick(void);
 //樱雪crc效验数组
+
+uint8_t buzzer_voice_num = 0; //最高位为状态位 剩下两位计数器
+uint8_t buzzer_voice_state = 0; //0未开启 1开启
+
+
 static const unsigned short crc16tab[256] = {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
 	0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
@@ -1982,8 +1987,8 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 
-				LOG_RECE_UART(uart_data.buf_data);
-				printf("\n\n");
+				//LOG_RECE_UART(uart_data.buf_data);
+				//printf("\n\n");
 
 				//打印结束
 				is_has = 0;
@@ -2582,6 +2587,13 @@ void test_voice(){
 
 }
 
+//初始化蜂鸣器
+void buzzer_voice()
+{
+	ithGpioSetOut(BUZZER);
+	ithGpioSetMode(BUZZER, ITH_GPIO_MODE0);
+}
+
 int SceneRun(void)
 {
     SDL_Event   ev;
@@ -2629,7 +2641,8 @@ int SceneRun(void)
 	//初始化队列
 	mq_init();
 
-
+	//初始化蜂鸣器
+	buzzer_voice();
 
 
 	//收发串口线程
@@ -2698,6 +2711,14 @@ int SceneRun(void)
 			}
 		}
 
+		//蜂鸣器开启
+		if (buzzer_voice_state == 1){
+			if ((buzzer_voice_num--) == 0){
+				ITH_GPIO_CLEAR(BUZZER);
+				buzzer_voice_state = 0;
+			}
+		}
+		
 
 
 		//判断是否有错误代码
@@ -2762,14 +2783,11 @@ int SceneRun(void)
 					if (curr_node_widget){
 						curr_node_widget->updown_cb(curr_node_widget, 0);
 					}
-					
 					break;
 				case 1073741889:
-					//case SDLK_DOWN:
 					if (curr_node_widget){
 						curr_node_widget->updown_cb(curr_node_widget, 1);
 					}
-					
 					break;
 				//确定
 				case 1073741883:
@@ -2919,9 +2937,18 @@ int SceneRun(void)
 				struct timeval t_time = { 0 };
 				switch (ev.key.keysym.sym)
 				{
+
+				//向上按键长按
+				case 1073741884:
+					BUZZER_OPEN()
+					break;
+				//向下按键长按
+				case 1073741889:
+					BUZZER_OPEN()
+					break;
 				//放开后是否长按
 				case 1073741883:
-
+					BUZZER_OPEN();
 					if (curr_node_widget){
 						LONG_PRESS_TIME(t_time, curtime, t_curr);
 						if (t_curr >= 2){
@@ -2935,6 +2962,7 @@ int SceneRun(void)
 					break;
 					//放开关机长按
 				case 1073741885:
+					BUZZER_OPEN();
 					LONG_PRESS_TIME(t_time, curtime, t_curr);
 					//长按
 					if (t_curr >= 2){
@@ -2948,6 +2976,7 @@ int SceneRun(void)
 					}
 					break;
 				case 1073741886:
+					BUZZER_OPEN();
 					//出厂设置
 					if (curr_node_widget){
 						ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
