@@ -922,6 +922,9 @@ bool MainLayerOnTimer(ITUWidget* widget, char* param)
 	return true;
 }
 
+extern 	uint8_t buzzer_voice_state ;
+extern 	uint8_t	buzzer_voice_num;
+
 //开机画面定时器
 bool WelcomeOnTimer(ITUWidget* widget, char* param)
 {
@@ -954,6 +957,7 @@ bool WelcomeOnTimer(ITUWidget* widget, char* param)
 		else{
 			//count += 1;
 			if (count == 0){
+				BUZZER_CLOSE(1);
 				count = 1;
 				sleep(2);
 				ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_OFF, NULL);
@@ -965,6 +969,7 @@ bool WelcomeOnTimer(ITUWidget* widget, char* param)
 			ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_ON, NULL);
 			//开机
 			SEND_OPEN_CMD();
+			BUZZER_CLOSE(1);
 			sleep(2);
 			ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
 			flag = 1;

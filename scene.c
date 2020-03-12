@@ -1974,9 +1974,6 @@ static void* UartFunc(void* arg)
 		
 		//如果串口有数据
 		if (len > 0){
-
-
-
 			//记录当前收到数据的时间
 			get_rtc_time(&rev_time, NULL);
 			//写入环形缓存
@@ -2711,13 +2708,8 @@ int SceneRun(void)
 			}
 		}
 
-		//蜂鸣器开启
-		if (buzzer_voice_state == 1){
-			if ((buzzer_voice_num--) == 0){
-				ITH_GPIO_CLEAR(BUZZER);
-				buzzer_voice_state = 0;
-			}
-		}
+		//蜂鸣器关闭
+		BUZZER_CLOSE(0);
 		
 
 
@@ -2780,8 +2772,11 @@ int SceneRun(void)
 				//真实控制板按键
 					//case SDLK_UP:
 				case 1073741884:
-					if (curr_node_widget){
+					/*if (curr_node_widget){
 						curr_node_widget->updown_cb(curr_node_widget, 0);
+					}*/
+					if (curr_node_widget){
+						get_rtc_cache_time(&curtime, NULL);
 					}
 					break;
 				case 1073741889:
@@ -2940,11 +2935,19 @@ int SceneRun(void)
 
 				//向上按键长按
 				case 1073741884:
-					BUZZER_OPEN()
+					BUZZER_OPEN();
+					LONG_PRESS_TIME(t_time, curtime, t_curr);
+					if ((yingxue_base.run_state == 2) && (t_curr >= 2)){
+						printf("send net\n");
+						yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
+					}
+					else if (curr_node_widget){
+						curr_node_widget->updown_cb(curr_node_widget, 0);
+					}
 					break;
 				//向下按键长按
 				case 1073741889:
-					BUZZER_OPEN()
+					BUZZER_OPEN();
 					break;
 				//放开后是否长按
 				case 1073741883:
