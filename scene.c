@@ -1858,21 +1858,23 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 			dst->is_err = 1;
 		}
 		//判断状态 流水
-		if (*(old + 1) & 0x10){
+		if ((*(old + 1)) & 0x10){
 			dst->state_show = 0x01;
 			//风机
 		}
-		if (*(old + 1) & 0x20){
+		if ((*(old + 1)) & 0x20){
 			dst->state_show = dst->state_show | 0x2;
 			//火焰
 		}
-		if (*(old + 1) & 0x40){
+		if ((*(old + 1)) & 0x40){
 			dst->state_show = dst->state_show | 0x4;
 			//风压
 		}
-		if (*(old + 1) & 0x80){
+		if ((*(old + 1)) & 0x80){
 			dst->state_show = dst->state_show | 0x8;
 		}
+		printf("state_show data=0x%02X,state=0x%02X\n", *(old+1), dst->state_show);
+
 		//设置温度[0][4]
 		dst->shezhi_temp = *(old+4);
 		//出水温度[0][5]
@@ -1903,6 +1905,10 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 	else if (idx == 0x03){
 		//[3][2] 回水温度
 		dst->huishui_temp = *(old + 2);
+		if (0xF0 == *(old + 6)){
+			dst->is_err = 1;
+			dst->err_no = 0xEC;
+		}
 	}
 	
 }
@@ -1984,8 +1990,8 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 
-				//LOG_RECE_UART(uart_data.buf_data);
-				//printf("\n\n");
+				LOG_RECE_UART(uart_data.buf_data);
+				printf("\n\n");
 
 				//打印结束
 				is_has = 0;
