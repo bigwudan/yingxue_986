@@ -1859,21 +1859,35 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 		}
 		//判断状态 流水
 		if ((*(old + 1)) & 0x10){
-			dst->state_show = 0x01;
-			//风机
+			dst->state_show = dst->state_show | 0x01;
+			
 		}
+		else{
+			dst->state_show = dst->state_show & ~(0x01);
+		}
+		//风机
+
 		if ((*(old + 1)) & 0x20){
 			dst->state_show = dst->state_show | 0x2;
-			//火焰
 		}
+		else{
+			dst->state_show = dst->state_show & ~(0x02);
+		}
+		//火焰
 		if ((*(old + 1)) & 0x40){
 			dst->state_show = dst->state_show | 0x4;
-			//风压
 		}
+		else{
+			dst->state_show = dst->state_show & ~(0x04);
+		}
+		//风压
 		if ((*(old + 1)) & 0x80){
 			dst->state_show = dst->state_show | 0x8;
 		}
-		printf("state_show data=0x%02X,state=0x%02X\n", *(old+1), dst->state_show);
+		else{
+			dst->state_show = dst->state_show & ~(0x08);
+		}
+		//printf("state_show data=0x%02X,state=0x%02X\n", *(old+1), dst->state_show);
 
 		//设置温度[0][4]
 		dst->shezhi_temp = *(old+4);
@@ -1885,9 +1899,10 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 		dst->err_no = *(old + 8);
 		//风机转速[0][10]
 		dst->wind_rate = *(old + 10);
+		//打印错误代码
+		printf("err_state=0x%02X, err_no=0x%2X\n",dst->is_err, dst->err_no);
+		
 
-		//test
-		dst->is_err = 0;
 	}
 	else if (idx == 0x01){
 		//无需解析
@@ -2721,21 +2736,13 @@ int SceneRun(void)
 		over_time_process();
 		//判断是否定时任务需要发送数据，并且接受子线程的数据
 		run_time_task();
-		if (yingxue_base.is_err){
-
-			if (yingxue_base.err_no == 0xEC){
-				printf("show err\r\n");
-				ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
-			}
-		}
-
 		//蜂鸣器关闭
 		BUZZER_CLOSE(0);
 		
 
 
 		//判断是否有错误代码
-		/*if (yingxue_base.is_err){
+		if (yingxue_base.is_err){
 			if (yingxue_base.err_no == 0xe0){
 				ituLayerGoto(ituSceneFindWidget(&theScene, "E0Layer"));
 			}
@@ -2770,7 +2777,7 @@ int SceneRun(void)
 				ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
 			}
 
-		}*/
+		}
 
 		//wifi模块通讯
 		yingxue_wifi_task();
