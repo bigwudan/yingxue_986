@@ -2152,16 +2152,26 @@ static void* UartFunc(void* arg)
 				}
 				//如果有指令需要发出
 				if (is_has){
+					//usleep(100*15);
 					struct timeval t_tm;
 					get_rtc_time(&t_tm, NULL);
-					printf("cur=%lu ，cur=%lu", t_tm.tv_sec, t_tm.tv_sec);
+
+					flag = write(UART_PORT, texBufArray, sizeof(texBufArray));
+
+					printf("flag=%d, cur=%lu ，cur=%lu", flag, t_tm.tv_sec, t_tm.tv_sec);
 					LOG_WRITE_UART(texBufArray);
 					printf("\n\n");
-					write(UART_PORT, texBufArray, sizeof(texBufArray));
+
 				}
 				//没有指令就应答
 				else{
-					write(UART_PORT, backBufArray, sizeof(texBufArray));
+					//usleep(100 * 15);
+					struct timeval t_tm;
+					get_rtc_time(&t_tm, NULL);
+					flag = write(UART_PORT, backBufArray, sizeof(texBufArray));
+					printf("flag=%d, cur=%lu ，cur=%lu", flag, t_tm.tv_sec, t_tm.tv_sec);
+					LOG_WRITE_UART(backBufArray);
+					printf("\n\n");
 				}
 			}
 		}
