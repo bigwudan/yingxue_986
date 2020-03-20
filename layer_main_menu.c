@@ -999,6 +999,62 @@ polling_main()
 
 }
 
+//设置出厂轮询
+void polling_layer1()
+{
+	ITUWidget *t_widget = NULL;
+	char t_buf[10] = { 0 };
+	//水流
+	if (yingxue_base.state_show & 0x01){
+		//显示
+		t_widget = ituSceneFindWidget(&theScene, "Background99");
+		ituWidgetSetVisible(t_widget, true);
+
+	}
+	else{
+		//不显示
+		t_widget = ituSceneFindWidget(&theScene, "Background99");
+		ituWidgetSetVisible(t_widget, false);
+	}
+
+	//Background35
+	if (yingxue_base.state_show & 0x04){
+		//显示
+		t_widget = ituSceneFindWidget(&theScene, "Background101");
+		ituWidgetSetVisible(t_widget, true);
+
+	}
+	else{
+		//不显示
+		t_widget = ituSceneFindWidget(&theScene, "Background101");
+		ituWidgetSetVisible(t_widget, false);
+	}
+
+	//Background36
+	if (yingxue_base.state_show & 0x02){
+		//显示
+		t_widget = ituSceneFindWidget(&theScene, "Background103");
+		ituWidgetSetVisible(t_widget, true);
+
+	}
+	else{
+		//不显示
+		t_widget = ituSceneFindWidget(&theScene, "Background103");
+		ituWidgetSetVisible(t_widget, false);
+	}
+
+	//出水温度
+	sprintf(t_buf, "%02d", yingxue_base.chushui_temp);
+	t_widget = ituSceneFindWidget(&theScene, "Text94");
+	ituTextSetString(t_widget, t_buf);
+
+	//风机转速
+	sprintf(t_buf, "%02d", yingxue_base.wind_rate);
+	t_widget = ituSceneFindWidget(&theScene, "Text96");
+	ituTextSetString(t_widget, t_buf);
+	return;
+
+}
 
 //樱雪主页面定时任务
 bool MainLayerOnTimer(ITUWidget* widget, char* param)
