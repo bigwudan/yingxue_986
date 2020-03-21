@@ -1052,6 +1052,54 @@ static void layer1_widget_confirm_cb(struct node_widget *widget, unsigned char s
 				t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
 				ituWidgetSetVisible(t_widget, true);
 			}
+
+			//显示
+			if (strcmp(widget->name, "Text22") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text21");
+				ituTextSetString(t_widget, "+PA");
+
+
+			}
+			else if (strcmp(widget->name, "Text90") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text91");
+				ituTextSetString(t_widget, "+DH");
+			}
+			else if (strcmp(widget->name, "Text33") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text34");
+				ituTextSetString(t_widget, "+PH");
+			}
+			else if (strcmp(widget->name, "Text82") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text89");
+				ituTextSetString(t_widget, "+FY");
+			}
+			else if (strcmp(widget->name, "Text39") == 0){
+
+				t_widget = ituSceneFindWidget(&theScene, "Text44");
+				ituTextSetString(t_widget, "+PL");
+			}
+			//空
+			else if (strcmp(widget->name, "Text80") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text81");
+				ituTextSetString(t_widget, "+FD");
+			}
+			else if (strcmp(widget->name, "Text45") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text46");
+				ituTextSetString(t_widget, "+DH");
+			}
+			else if (strcmp(widget->name, "Text73") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text74");
+				ituTextSetString(t_widget, "+HS");
+			}
+			else if (strcmp(widget->name, "Text58") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text59");
+				ituTextSetString(t_widget, "+HI");
+			}
+			else if (strcmp(widget->name, "Text65") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text66");
+				ituTextSetString(t_widget, "+ED");
+			}
+
+
 		}
 		else{
 			//解除锁定
@@ -1060,6 +1108,59 @@ static void layer1_widget_confirm_cb(struct node_widget *widget, unsigned char s
 				t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
 				ituWidgetSetVisible(t_widget, false);
 			}
+
+
+			if (widget->checked_back_name){
+				t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
+				ituWidgetSetVisible(t_widget, true);
+			}
+
+			//显示
+			if (strcmp(widget->name, "Text22") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text21");
+				ituTextSetString(t_widget, "*PA");
+
+
+			}
+			else if (strcmp(widget->name, "Text90") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text91");
+				ituTextSetString(t_widget, "*DH");
+			}
+			else if (strcmp(widget->name, "Text33") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text34");
+				ituTextSetString(t_widget, "*PH");
+			}
+			else if (strcmp(widget->name, "Text82") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text89");
+				ituTextSetString(t_widget, "*FY");
+			}
+			else if (strcmp(widget->name, "Text39") == 0){
+
+				t_widget = ituSceneFindWidget(&theScene, "Text44");
+				ituTextSetString(t_widget, "*PL");
+			}
+			//空
+			else if (strcmp(widget->name, "Text80") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text81");
+				ituTextSetString(t_widget, "*FD");
+			}
+			else if (strcmp(widget->name, "Text45") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text46");
+				ituTextSetString(t_widget, "*DH");
+			}
+			else if (strcmp(widget->name, "Text73") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text74");
+				ituTextSetString(t_widget, "*HS");
+			}
+			else if (strcmp(widget->name, "Text58") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text59");
+				ituTextSetString(t_widget, "*HI");
+			}
+			else if (strcmp(widget->name, "Text65") == 0){
+				t_widget = ituSceneFindWidget(&theScene, "Text66");
+				ituTextSetString(t_widget, "*ED");
+			}
+
 		}
 	}
 	
@@ -1105,47 +1206,47 @@ test_layer_1(struct node_widget *t_node_widget)
 	//显示
 	if (strcmp(t_node_widget->name, "Text22") == 0){
 		t_widget = ituSceneFindWidget(&theScene, "Text21");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*PA");
 
 
 	}
 	else if (strcmp(t_node_widget->name, "Text90") == 0){
 		t_widget = ituSceneFindWidget(&theScene, "Text91");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*DH");
 	}
 	else if (strcmp(t_node_widget->name, "Text33") == 0){
 		t_widget = ituSceneFindWidget(&theScene, "Text34");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*PH");
 	}
 	else if (strcmp(t_node_widget->name, "Text82") == 0){
 		t_widget = ituSceneFindWidget(&theScene, "Text89");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*FY");
 	}
 	else if (strcmp(t_node_widget->name, "Text39") == 0){
 
 		t_widget = ituSceneFindWidget(&theScene, "Text44");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*PL");
 	}
 	//空
 	else if (strcmp(t_node_widget->name, "Text80") == 0){
 		t_widget = ituSceneFindWidget(&theScene, "Text81");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*FD");
 	}
 	else if (strcmp(t_node_widget->name, "Text45") == 0){
 		t_widget = ituSceneFindWidget(&theScene, "Text46");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*DH");
 	}
 	else if (strcmp(t_node_widget->name, "Text73") == 0){
 		t_widget = ituSceneFindWidget(&theScene, "Text74");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*HS");
 	}
 	else if (strcmp(t_node_widget->name, "Text58") == 0){
 		t_widget = ituSceneFindWidget(&theScene, "Text59");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*HI");
 	}
 	else if (strcmp(t_node_widget->name, "Text65") == 0){
 		t_widget = ituSceneFindWidget(&theScene, "Text66");
-		ituTextSetString(t_widget, "xx");
+		ituTextSetString(t_widget, "*ED");
 	}
 }
 
@@ -1160,11 +1261,20 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 	unsigned char t_num = 0;
 	if (widget->state == 1){ //如果已经锁定
 		//lock_widget_up_down(widget, state);
-		//pa 对应 FA
+		//pa 对应 FAFA 取值范围是 .11 比如 返回给我 03  那范围就是 0 - 2
 		//(unsigned char cmd, unsigned char data_1, unsigned char data_2, unsigned char data_3, unsigned char data_4, enum main_pthread_mq_state state)
 		if (strcmp(widget->name, "Text22") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text22");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
+
 			//t_num = 0x01;
 			sendCmdToCtr(0x0A, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
@@ -1172,23 +1282,56 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 		else if (strcmp(widget->name, "Text90") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text90");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
+
 			sendCmdToCtr(0x0B, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
 		//PH
 		else if (strcmp(widget->name, "Text33") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text33");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x0B, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
 		//FY
 		else if (strcmp(widget->name, "Text82") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text82");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
 		}
 		//PL
 		else if (strcmp(widget->name, "Text39") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text39");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x0C, t_num, 0, 0, 0, SET_CHUCHANG);
 
 		}
@@ -1196,37 +1339,70 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 		else if (strcmp(widget->name, "Text80") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text80");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
 		}
 		//DH
 		else if (strcmp(widget->name, "Text45") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text45");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x0D, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
 		else if (strcmp(widget->name, "Text73") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text73");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
-			//yingxue_base.huishui_temp = t_num;
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
+		
 		}
 		//HI
 		else if (strcmp(widget->name, "Text58") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text58");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x0E, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
 		else if (strcmp(widget->name, "Text65") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text65");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			if (state == 0){
+				t_num = t_num + 1;
+			}
+			else{
+				t_num = t_num - 1;
+			}
+			sprintf(t_buf, "%02X", t_num);
+			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x15, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
-		if (state == 0){
-			t_num = t_num + 1;
-		}
-		else{
-			t_num = t_num - 1;
-		}
-		sprintf(t_buf, "%02X", t_num);
-		ituTextSetString(t_widget, t_buf);
+
 
 	}
 	else{
@@ -3070,6 +3246,13 @@ int SceneRun(void)
 						test_buf_1[4] = 0x00;
 					}
 					break;
+				case 55://按键7
+					//出厂设置
+					if (curr_node_widget){
+						ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
+					}
+					break;
+
 
                 case SDLK_e:
                     result |= ituSceneUpdate(&theScene, ITU_EVENT_TOUCHPINCH, 20, 30, 40);
