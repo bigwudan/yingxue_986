@@ -484,7 +484,7 @@ static void lock_widget_up_down(struct node_widget *widget, unsigned char state)
 
 	//判断范围
 	//回水温差范围
-	if (style == HUISHUI_TEMP && (t_num < 0 || t_num >= 100)){
+	if (style == HUISHUI_TEMP && (t_num < 0 || t_num >= 16)){
 		return;
 	}
 	//设置北京时间
@@ -607,29 +607,6 @@ static void main_widget_confirm_cb(struct node_widget *widget, unsigned char sta
 		}
 	}
 
-	
-
-
-	//只有在0状态，第一点击，上下调整
-/*	if (yingxue_base.adjust_temp_state == 0){
-		yingxue_base.adjust_temp_state = 3;
-	}
-	//只有在状态3才可以进入
-	else if (yingxue_base.adjust_temp_state == 3){
-		ITUWidget *t_widget = NULL;
-		if (strcmp(widget->name, "BackgroundButton47") == 0){
-			t_widget = ituSceneFindWidget(&theScene, "MainLayer");
-			ituLayerGoto((ITULayer *)t_widget);
-		}
-		else if (strcmp(widget->name, "yureSprite") == 0){
-			t_widget = ituSceneFindWidget(&theScene, "yureLayer");
-			ituLayerGoto((ITULayer *)t_widget);
-		}
-		else if (strcmp(widget->name, "moshiSprite") == 0){
-			t_widget = ituSceneFindWidget(&theScene, "moshiLayer");
-			ituLayerGoto((ITULayer *)t_widget);
-		}
-	}*/
 }
 
 static void main_widget_up_down_cb(struct node_widget *widget, unsigned char state)
@@ -1288,6 +1265,7 @@ static void yingxue_base_init()
 	yingxue_base.fruit_moshi.temp = 38;
 	yingxue_base.shezhi_temp = 35;
 	yingxue_base.is_err = 0;
+	yingxue_base.huishui_temp = 5;
 
 }
 
@@ -1296,7 +1274,7 @@ static void node_widget_init()
 {
 	curr_node_widget = NULL;
 	//主页面
-	mainlayer_0.up = NULL;
+	mainlayer_0.up = &mainlayer_2;
 	mainlayer_0.down = &mainlayer_1;
 	mainlayer_0.focus_back_name = "Background100";
 	mainlayer_0.name = "yureSprite";
@@ -1311,7 +1289,7 @@ static void node_widget_init()
 	mainlayer_1.updown_cb = main_widget_up_down_cb;
 
 	mainlayer_2.up = &mainlayer_1;
-	mainlayer_2.down = NULL;
+	mainlayer_2.down = &mainlayer_0;
 	mainlayer_2.focus_back_name = "Background102";
 	mainlayer_2.name = "moshiSprite";
 	mainlayer_2.confirm_cb = main_widget_confirm_cb;
@@ -1319,7 +1297,7 @@ static void node_widget_init()
 
 
 	//预热界面
-	yureLayer_0.up = NULL;
+	yureLayer_0.up = &yureLayer_5;
 	yureLayer_0.down = &yureLayer_1;
 	yureLayer_0.focus_back_name = "BackgroundButton78";
 	yureLayer_0.name = "BackgroundButton47";
@@ -1356,14 +1334,14 @@ static void node_widget_init()
 	yureLayer_4.updown_cb = yure_widget_up_down_cb;
 
 	yureLayer_5.up = &yureLayer_4;
-	yureLayer_5.down = NULL;
+	yureLayer_5.down = &yureLayer_0;
 	yureLayer_5.focus_back_name = "Background46";
 	yureLayer_5.name = "BackgroundButton21";
 	yureLayer_5.confirm_cb = yure_widget_confirm_cb;
 	yureLayer_5.updown_cb = yure_widget_up_down_cb;
 
 	//预热定时
-	yureshijian_widget_0.up = NULL;
+	yureshijian_widget_0.up = &yureshijian_widget_num_23;
 	yureshijian_widget_0.down = &yureshijian_widget_num_0;
 	yureshijian_widget_0.focus_back_name = "BackgroundButton30"; //选中
 	yureshijian_widget_0.name = "BackgroundButton65";//未选中
@@ -1557,14 +1535,14 @@ static void node_widget_init()
 
 	yureshijian_widget_num_23.value = 23;
 	yureshijian_widget_num_23.up = &yureshijian_widget_num_22;
-	yureshijian_widget_num_23.down = NULL;
+	yureshijian_widget_num_23.down = &yureshijian_widget_0;
 	yureshijian_widget_num_23.focus_back_name = "radio";
 	yureshijian_widget_num_23.name = "RadioBox80";
 	yureshijian_widget_num_23.confirm_cb = yure_settime_widget_confirm_cb;
 	yureshijian_widget_num_23.updown_cb = yure_settime_up_down_cb;
 
 	//预约时间
-	yureshezhiLayer_0.up = NULL;
+	yureshezhiLayer_0.up = &yureshezhiLayer_3;
 	yureshezhiLayer_0.down = &yureshezhiLayer_1;
 	yureshezhiLayer_0.focus_back_name = "BackgroundButton85";
 	yureshezhiLayer_0.name = "BackgroundButton60";
@@ -1591,7 +1569,7 @@ static void node_widget_init()
 
 
 	yureshezhiLayer_3.up = &yureshezhiLayer_2;
-	yureshezhiLayer_3.down = NULL;
+	yureshezhiLayer_3.down = &yureshezhiLayer_0;
 	yureshezhiLayer_3.focus_back_name = "Background40";
 	yureshezhiLayer_3.checked_back_name = "Background107";
 	yureshezhiLayer_3.name = "Background4";
@@ -1600,7 +1578,7 @@ static void node_widget_init()
 	yureshezhiLayer_3.type = 1;
 
 	//模式
-	moshiLayer_0.up = NULL;
+	moshiLayer_0.up = &moshiLayer_4;
 	moshiLayer_0.down = &moshiLayer_1;
 	moshiLayer_0.focus_back_name = "BackgroundButton33";
 	moshiLayer_0.name = "BackgroundButton68";
@@ -1632,7 +1610,7 @@ static void node_widget_init()
 	//moshiLayer_3.long_press_cb = moshi_widget_longpress_cb;
 
 	moshiLayer_4.up = &moshiLayer_3;
-	moshiLayer_4.down = NULL;
+	moshiLayer_4.down = &moshiLayer_0;
 	moshiLayer_4.focus_back_name = "moshi_BackgroundButton82";
 	moshiLayer_4.name = "moshi_BackgroundButton13";
 	moshiLayer_4.confirm_cb = moshi_widget_confirm_cb;
@@ -1640,7 +1618,7 @@ static void node_widget_init()
 	//moshiLayer_4.long_press_cb = moshi_widget_longpress_cb;
 
 	//出水
-	chushui_0.up = NULL;
+	chushui_0.up = &chushui_2;
 	chushui_0.down = &chushui_1;
 	chushui_0.focus_back_name = "chushui_BackgroundButton7";
 	chushui_0.name = "chushui_BackgroundButton73";
@@ -1657,7 +1635,7 @@ static void node_widget_init()
 	chushui_1.type = 1;
 
 	chushui_2.up = &chushui_1;
-	chushui_2.down = NULL;
+	chushui_2.down = &chushui_0;
 	chushui_2.focus_back_name = "chushui_Background51";
 	chushui_2.name = "chushui_BackgroundButton1";
 	chushui_2.confirm_cb = chushui_widget_confirm_cb;
@@ -1665,7 +1643,7 @@ static void node_widget_init()
 
 	//出厂设置
 	//返回按键
-	layer1_0.up = NULL;
+	layer1_0.up = &layer1_15;
 	layer1_0.down = &layer1_6;
 	layer1_0.focus_back_name = NULL;
 	layer1_0.name = "BackgroundButton60";
@@ -1810,7 +1788,7 @@ static void node_widget_init()
 
 	//ed
 	layer1_15.up = &layer1_14;
-	layer1_15.down = NULL;
+	layer1_15.down = &layer1_0;
 	layer1_15.focus_back_name = NULL;
 	layer1_15.name = "Text65";
 	layer1_15.confirm_cb = layer1_widget_confirm_cb;
@@ -2887,7 +2865,7 @@ int SceneRun(void)
 
 
 		//判断是否有错误代码
-		if (0 || yingxue_base.is_err){
+		if (yingxue_base.is_err){
 			if (yingxue_base.err_no == 0xe0){
 				ituLayerGoto(ituSceneFindWidget(&theScene, "E0Layer"));
 			}
