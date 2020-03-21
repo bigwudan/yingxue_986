@@ -116,8 +116,9 @@ static void MainLayer_init()
 	ituWidgetSetVisible(t_widget, false);
 	//默认选中中间一个边框
 	curr_node_widget = &mainlayer_1;
+	//默认去掉选中框，只有在点击的时候才出现
 	t_widget = ituSceneFindWidget(&theScene, curr_node_widget->focus_back_name);
-	ituWidgetSetVisible(t_widget, true);
+	ituWidgetSetVisible(t_widget, false);
 	//初始化状态
 	yingxue_base.adjust_temp_state = 0;
 	is_shake = 0;
@@ -765,6 +766,9 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 		yingxue_base.curr_layer = LAYER1;
 		Layer1();
 	}
+	else{
+		yingxue_base.curr_layer = ERRORLAYER;
+	}
 	return true;
 
 }
@@ -891,6 +895,8 @@ polling_main()
 	}
 	else{
 		if (yingxue_base.adjust_temp_state == 0 || yingxue_base.adjust_temp_state == 3){
+			//进入上下调整状态，停止闪烁
+			is_shake = 0;
 			//显示出水温度
 			sprintf(t_buf, "%d", yingxue_base.chushui_temp);
 			t_widget = ituSceneFindWidget(&theScene, "Text17");
@@ -1055,6 +1061,15 @@ void polling_layer1()
 	return;
 
 }
+
+//错误轮询
+void polling_err()
+{
+	if (yingxue_base.is_err == 0){
+		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+	}
+}
+
 
 //樱雪主页面定时任务
 bool MainLayerOnTimer(ITUWidget* widget, char* param)
@@ -1278,6 +1293,7 @@ bool WelcomeOnTimer(ITUWidget* widget, char* param)
 //ERROnTimer
 bool ERROnTimer(ITUWidget* widget, char* param)
 {
+	return true;
 	sleep(2);
 	if (yingxue_base.is_err == 0){
 		printf("err =0\r\n");
