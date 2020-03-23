@@ -2959,6 +2959,10 @@ int SceneRun(void)
 			}
 			printf("end \n");
 		}
+		else{
+			printf("recv=%d\n", test_len);
+		
+		}
 
 
 		sleep(2);
@@ -3126,7 +3130,12 @@ int SceneRun(void)
 					break;
 				//关机
 				case 1073741885:
-					get_rtc_cache_time(&curtime, NULL);
+					printf("send wifi_cmd_net 2\n");
+
+					yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
+
+
+					//get_rtc_cache_time(&curtime, NULL);
 					break;
 				//键盘按键
                 case SDLK_UP:
@@ -3326,6 +3335,7 @@ int SceneRun(void)
 					break;
 					//放开关机长按
 				case 1073741885:
+					break;
 					BUZZER_OPEN();
 					LONG_PRESS_TIME(t_time, curtime, t_curr);
 					//长按
