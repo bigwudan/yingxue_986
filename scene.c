@@ -88,6 +88,12 @@ extern void ScreenSetDoubleClick(void);
 uint8_t buzzer_voice_num = 0; //最高位为状态位 剩下两位计数器
 uint8_t buzzer_voice_state = 0; //0未开启 1开启
 
+//记录收到数据的当前时间
+struct   timeval rev_time;
+
+//加锁
+static pthread_mutex_t msg_mutex = 0;//PTHREAD_MUTEX_INITIALIZER;
+
 extern char is_shake;
 
 static const unsigned short crc16tab[256] = {
@@ -439,6 +445,9 @@ static void key_down_process()
 {
 	//最后一次的时间
 	get_rtc_cache_time(&last_down_time, NULL);
+
+	//更新获取到数据的时间
+	//get_rtc_cache_time(&rev_time, NULL);
 	//更新处理标识
 	is_deal_over_time = 0;
 }
@@ -842,6 +851,9 @@ static void yure_yureshezhiLayer_widget_confirm_cb(struct node_widget *widget, u
 			}
 			//北京时间小时
 			else if ((strcmp(widget->name, "Background3") == 0) || (strcmp(widget->name, "Background4") == 0)){
+
+				pthread_mutex_lock(&msg_mutex);
+				printf("*********star lock\n");
 				unsigned char hour = 0;
 				unsigned char min = 0;
 				struct timeval curr_time;
@@ -857,12 +869,19 @@ static void yure_yureshezhiLayer_widget_confirm_cb(struct node_widget *widget, u
 				t_buf = ituTextGetString(t_widget);
 				min = atoi(t_buf);
 				set_rtc_time(hour, min);
+				//设置缓存时间
+				get_rtc_time(&yingxue_base.cache_time, NULL);
+				//最后一次的时间
+				get_rtc_cache_time(&last_down_time, NULL);
+				//更新获取到数据的时间
+				get_rtc_cache_time(&rev_time, NULL);
+				pthread_mutex_unlock(&msg_mutex);
+
 			}
 			widget->state = 0;
 			t_widget = ituSceneFindWidget(&theScene, widget->checked_back_name);
 			ituWidgetSetVisible(t_widget, false);
-			//设置时间后从新记录一次最后时间
-			key_down_process();
+
 		}
 	}
 }
@@ -2249,8 +2268,7 @@ static unsigned char win_test()
 //线程串口回调函数
 static void* UartFunc(void* arg)
 {
-	//记录当前时间
-	struct   timeval rev_time;
+
 	//主线程发送消息队列
 	struct main_pthread_mq_tag main_pthread_mq;
 	//缓存数据
@@ -2287,7 +2305,7 @@ static void* UartFunc(void* arg)
 		//如果串口有数据
 		if (len > 0){
 			//记录当前收到数据的时间
-			get_rtc_time(&rev_time, NULL);
+			get_rtc_cache_time(&rev_time, NULL);
 			//写入环形缓存
 			for (int i = 0; i < len; i++){
 				flag = in_chain_list(&chain_list, rece_buf[i]);
@@ -2296,8 +2314,8 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 
-				//LOG_RECE_UART(uart_data.buf_data);
-				//printf("\n\n");
+				LOG_RECE_UART(uart_data.buf_data);
+				printf("\n\n");
 
 				//打印结束
 				is_has = 0;
@@ -2318,10 +2336,6 @@ static void* UartFunc(void* arg)
 				}
 				//如果有指令需要发出
 				if (is_has){
-					//usleep(100*15);
-					struct timeval t_tm;
-					get_rtc_time(&t_tm, NULL);
-
 					flag = write(UART_PORT, texBufArray, sizeof(texBufArray));
 
 					/*printf("sendtoCtr flag=%d, cur=%lu ，cur=%lu", flag, t_tm.tv_sec, t_tm.tv_sec);
@@ -2337,12 +2351,12 @@ static void* UartFunc(void* arg)
 		}
 		else{
 			struct timeval nodata_time;
-			get_rtc_time(&nodata_time, NULL);
+			//get_rtc_time(&nodata_time, NULL);
+			get_rtc_cache_time(&nodata_time, NULL);
 			//测试
 			//printf("rev=%lu,rev=%lu,", rev_time.tv_sec, rev_time.tv_sec);
 			//printf("no_time=%lu,no_time=%lu\r\n", nodata_time.tv_sec, nodata_time.tv_sec);
 			if ((nodata_time.tv_sec - rev_time.tv_sec) > 30){
-				//printf("over time\n");
 				//发送错误信息
 				memset(&tm, 0, sizeof(struct timespec));
 				tm.tv_sec = 1;
@@ -2996,6 +3010,10 @@ int SceneRun(void)
 
 	//初始化wifi模块
 	yingxue_wifi_init();
+
+
+	//初始化锁
+	pthread_mutex_init(&msg_mutex, NULL);
 
 
     for (;;)

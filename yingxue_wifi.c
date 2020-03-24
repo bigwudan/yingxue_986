@@ -88,13 +88,13 @@ yingxue_wifi_data_check(struct wifi_cache_tag *wifi_cache, struct wifi_frame_tag
 	}
 
 	//打印
-	printf("wifi rec:");
+	/*printf("wifi rec:");
 
 	printf("cmd=0x%02X,data=", wifi_frame->command);
 	for (int i = 0; i < wifi_frame->data_len; i++){
 		printf("0x%02X ", wifi_frame->data[i]);
 	}
-	printf(" end\n");
+	printf(" end\n");*/
 	CLEAN_WIFI_CACHE(wifi_cache);
 	return 1;
 }
@@ -204,7 +204,7 @@ yingxue_wifi_process_command(struct wifi_frame_tag *wifi_frame)
 	}
 	//设置温度
 	else if (command_id == WIFI_CTR_TEMP){
-		printf("WIFI_CTR_TEMP=0x%02X\n", command);
+		//printf("WIFI_CTR_TEMP=0x%02X\n", command);
 		//设置温度 模式设置	4	模式设置	设置温度	定升设定
 		sendCmdToCtr(0x04, 0x00, command, 0x00, 0x00, SET_TEMP);
 
@@ -459,7 +459,7 @@ yingxue_wifi_upstate()
 	}
 	else if (wifi_base_g.beg_upstate == 1){
 		//unsigned char run_state; //0第一次上电 1开机 2关机
-		printf("***********run_state=0x%02X***********\n", yingxue_base.run_state);
+		//printf("***********run_state=0x%02X***********\n", yingxue_base.run_state);
 		if (yingxue_base.run_state == 2){
 			cmd_data = 0;
 		}
@@ -527,11 +527,11 @@ yingxue_wifi_senduart(struct wifi_uart_mq_tag *wifi_uart_mq)
 #else
 	//发送串口数据
 	len = write(UART_PORT_WIFI, wifi_uart_mq->data, wifi_uart_mq->len);
-	printf(" wifi send:%d\n", len);
+	/*printf(" wifi send:%d\n", len);
 	for (int i = 0; i < wifi_uart_mq->len; i++){
 		printf("0x%02X ", wifi_uart_mq->data[i]);
 	}
-	printf(" end\r\n");
+	printf(" end\r\n");*/
 #endif
 	return;
 }
