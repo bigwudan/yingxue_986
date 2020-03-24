@@ -202,8 +202,13 @@ yingxue_wifi_process_command(struct wifi_frame_tag *wifi_frame)
 			yingxue_base.moshi_mode = 2;
 		}
 	}
-	//无
+	//设置温度
 	else if (command_id == WIFI_CTR_TEMP){
+		printf("WIFI_CTR_TEMP=0x%02X\n", command);
+		//设置温度 模式设置	4	模式设置	设置温度	定升设定
+		sendCmdToCtr(0x04, 0x00, command, 0x00, 0x00, SET_TEMP);
+
+
 
 	}
 	//无
@@ -318,7 +323,6 @@ void yingxue_wifi_to_wifi(enum wifi_command_state cmd_state, uint16_t state_id, 
 		for (int i = 0; i < 12; i++){
 			wifi_uart_mq.data[12] = (uint8_t)((wifi_uart_mq.data[12] + wifi_uart_mq.data[i]) & 0xff);
 		}
-		wifi_uart_mq.data[12] = 0x73;
 		wifi_uart_mq.len = 13;
 
 	}
@@ -455,11 +459,12 @@ yingxue_wifi_upstate()
 	}
 	else if (wifi_base_g.beg_upstate == 1){
 		//unsigned char run_state; //0第一次上电 1开机 2关机
-		if (yingxue_base.run_state == 1){
-			cmd_data = 1;
-		}
-		else if (yingxue_base.run_state == 2){
+		printf("***********run_state=0x%02X***********\n", yingxue_base.run_state);
+		if (yingxue_base.run_state == 2){
 			cmd_data = 0;
+		}
+		else{
+			cmd_data = 1;
 		}
 
 		yingxue_wifi_to_wifi(WIFI_CMD_STATE_UP, 101, cmd_data);

@@ -2324,9 +2324,9 @@ static void* UartFunc(void* arg)
 
 					flag = write(UART_PORT, texBufArray, sizeof(texBufArray));
 
-					//printf("flag=%d, cur=%lu ，cur=%lu", flag, t_tm.tv_sec, t_tm.tv_sec);
+					/*printf("sendtoCtr flag=%d, cur=%lu ，cur=%lu", flag, t_tm.tv_sec, t_tm.tv_sec);
 					LOG_WRITE_UART(texBufArray);
-					printf("\n\n");
+					printf("\n");*/
 
 				}
 				//没有指令就应答
