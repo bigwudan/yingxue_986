@@ -9,7 +9,7 @@
 #define MAX_FRAME_NUM 255
 
 //回复命令成功
-#define BACK_COMMAND_SUCCESS(COMMADN_ID, STATE) yingxue_wifi_to_wifi(WIFI_CMD_STATE_UP, COMMADN_ID, STATE)
+#define BACK_COMMAND_SUCCESS(COMMADN_ID, STATE) yingxue_wifi_to_wifi(WIFI_CMD_STATE_CTR, COMMADN_ID, STATE)
 
 
 

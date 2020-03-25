@@ -163,7 +163,7 @@ struct yingxue_base_tag{
 	unsigned char shezhi_temp; //设置温度
 	unsigned char run_state; //0第一次上电 1开机 2关机
 	unsigned char state_show;//第0位 有水  第1位 风机 第2位 火焰 第3位 风压
-	unsigned char shizhe_temp;//设置温度
+	//unsigned char shizhe_temp;//设置温度
 	unsigned char chushui_temp;//出水温度
 	unsigned char jinshui_temp;//进水温度
 	unsigned char huishui_temp; //回水温度 ,预热设置回差

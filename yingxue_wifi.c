@@ -88,13 +88,13 @@ yingxue_wifi_data_check(struct wifi_cache_tag *wifi_cache, struct wifi_frame_tag
 	}
 
 	//打印
-	/*printf("wifi rec:");
+	printf("wifi rec:");
 
 	printf("cmd=0x%02X,data=", wifi_frame->command);
 	for (int i = 0; i < wifi_frame->data_len; i++){
 		printf("0x%02X ", wifi_frame->data[i]);
 	}
-	printf(" end\n");*/
+	printf(" end\n");
 	CLEAN_WIFI_CACHE(wifi_cache);
 	return 1;
 }
@@ -190,23 +190,30 @@ yingxue_wifi_process_command(struct wifi_frame_tag *wifi_frame)
 		ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
 
 	}
-	//选择模式0：常规模式1：果蔬模式2：ECO模式
+	//选择模式0：常规模式 1：果蔬模式 2：ECO模式
 	else if (command_id == WIFI_CTR_MODE){
 		if (command == 0){
-			yingxue_base.moshi_mode = 0;
+			//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
+			sendCmdToCtr(0x04, 0x00, yingxue_base.normal_moshi.temp, 0x00, 0x00, SET_TEMP);
+			yingxue_base.moshi_mode = 1;
 		}
 		else if (command == 1){
-			yingxue_base.moshi_mode = 3;
+			//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
+			sendCmdToCtr(0x04, 0x00, yingxue_base.super_moshi.temp, 0x00, 0x00, SET_TEMP);
+			yingxue_base.moshi_mode = 4;
 		}
 		else if (command == 2){
-			yingxue_base.moshi_mode = 2;
+			//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
+			sendCmdToCtr(0x04, 0x00, yingxue_base.eco_moshi.temp, 0x00, 0x00, SET_TEMP);
+			yingxue_base.moshi_mode = 3;
 		}
 	}
 	//设置温度
 	else if (command_id == WIFI_CTR_TEMP){
-		//printf("WIFI_CTR_TEMP=0x%02X\n", command);
+		printf("WIFI_CTR_TEMP=0x%02X\n", command);
 		//设置温度 模式设置	4	模式设置	设置温度	定升设定
 		sendCmdToCtr(0x04, 0x00, command, 0x00, 0x00, SET_TEMP);
+
 
 
 
@@ -303,6 +310,7 @@ void yingxue_wifi_to_wifi(enum wifi_command_state cmd_state, uint16_t state_id, 
 		wifi_uart_mq.len = sizeof(to_wifi_net);
 
 	}
+	//状态查询
 	else if (cmd_state == WIFI_CMD_STATE_UP){
 		wifi_uart_mq.data[0] = 0xfc;
 		wifi_uart_mq.data[1] = 0x00;
@@ -326,6 +334,7 @@ void yingxue_wifi_to_wifi(enum wifi_command_state cmd_state, uint16_t state_id, 
 		wifi_uart_mq.len = 13;
 
 	}
+	//返回状态
 	else if (cmd_state == WIFI_CMD_STATE_CTR){
 		wifi_uart_mq.data[0] = 0xfc;
 		wifi_uart_mq.data[1] = 0x00;
@@ -337,7 +346,12 @@ void yingxue_wifi_to_wifi(enum wifi_command_state cmd_state, uint16_t state_id, 
 
 		}
 		wifi_uart_mq.data[6] = 0x01;
-		wifi_uart_mq.data[7] = 0x8;
+		//wifi_uart_mq.data[7] = 0x8;
+		for (int i = 0; i < 7; i++){
+			wifi_uart_mq.data[7] = (uint8_t)((wifi_uart_mq.data[7] + wifi_uart_mq.data[i]) & 0xff);
+		}
+	
+
 		wifi_uart_mq.len = 8;
 	}
 	//fc 00 00 00 fc
@@ -444,7 +458,8 @@ yingxue_wifi_upstate()
 
 	}
 	else if (wifi_base_g.beg_upstate == 3){
-		cmd_data = yingxue_base.shizhe_temp;
+		cmd_data = yingxue_base.shezhi_temp;
+		printf("shezhe_tmp=0x%02X\n", cmd_data);
 		yingxue_wifi_to_wifi(WIFI_CMD_STATE_UP, 103, cmd_data);
 	}
 	else if (wifi_base_g.beg_upstate == 2){
@@ -527,11 +542,11 @@ yingxue_wifi_senduart(struct wifi_uart_mq_tag *wifi_uart_mq)
 #else
 	//发送串口数据
 	len = write(UART_PORT_WIFI, wifi_uart_mq->data, wifi_uart_mq->len);
-	/*printf(" wifi send:%d\n", len);
+	printf(" wifi send:%d\n", len);
 	for (int i = 0; i < wifi_uart_mq->len; i++){
 		printf("0x%02X ", wifi_uart_mq->data[i]);
 	}
-	printf(" end\r\n");*/
+	printf(" end\r\n");
 #endif
 	return;
 }

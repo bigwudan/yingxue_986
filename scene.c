@@ -12,6 +12,7 @@
 #include "scene.h"
 #include "ctrlboard.h"
 #include "yingxue_wifi.h"
+#include "iniparser/iniparser.h"
 
 #ifdef _WIN32
     #include <crtdbg.h>
@@ -38,7 +39,7 @@ extern void resetScene(void);
 // status
 static QuitValue    quitValue;
 static bool         inVideoState;
-
+static dictionary* cfgIni;
 // command
 typedef enum
 {
@@ -2314,8 +2315,8 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 
-				LOG_RECE_UART(uart_data.buf_data);
-				printf("\n\n");
+				//LOG_RECE_UART(uart_data.buf_data);
+				//printf("\n\n");
 
 				//打印结束
 				is_has = 0;
@@ -2338,9 +2339,9 @@ static void* UartFunc(void* arg)
 				if (is_has){
 					flag = write(UART_PORT, texBufArray, sizeof(texBufArray));
 
-					/*printf("sendtoCtr flag=%d, cur=%lu ，cur=%lu", flag, t_tm.tv_sec, t_tm.tv_sec);
+					printf("sendtoCtr flag=%d ", flag);
 					LOG_WRITE_UART(texBufArray);
-					printf("\n");*/
+					printf("\n");
 
 				}
 				//没有指令就应答
@@ -2936,6 +2937,94 @@ polling_layer()
 	}
 
 }
+#define INI_FILENAME "ctrlboard.ini"
+
+//测试写入文件系统
+static void test_file_init()
+{
+	cfgIni = iniparser_load(CFG_PUBLIC_DRIVE ":/" INI_FILENAME);
+	if (!cfgIni){
+		printf("worry\n");
+		exit(1);
+	}
+}
+
+
+static void test_file_read()
+{
+	int num = 0;
+	num = iniparser_getint(cfgIni, "yingxue:chushui", 1);
+	printf("read file = %d\n", num);
+}
+
+static void test_file_write()
+{
+	FILE* f;
+	int flag;
+	flag = iniparser_set(cfgIni, "yingxue:chushui", "123");
+	printf("111test_file_write=%d\n", flag);
+	// save to file
+	f = fopen(CFG_PUBLIC_DRIVE ":/" INI_FILENAME, "wb");
+	iniparser_dump_ini(cfgIni, f);
+	fclose(f);
+
+	ioctl(ITP_DEVICE_NOR, ITP_IOCTL_FLUSH, NULL);
+
+}
+
+static void
+test_write_file()
+{
+	FILE* f;
+
+	char *buf = "12312";
+	int flag = 0;
+	int num = 0;
+	cfgIni = iniparser_load(CFG_PUBLIC_DRIVE ":/" INI_FILENAME);
+	/*if (!cfgIni){
+		printf("worry\n");
+		exit(1);
+	}
+	else{
+	
+		flag = iniparser_set(cfgIni, "yingxue:chushui", buf);
+		printf("inipare=%d\n", flag);
+
+		// save to file
+		f = fopen(CFG_PUBLIC_DRIVE ":/" INI_FILENAME, "wb");
+		if (!f)
+		{
+			printf("cannot open ini file: %s\n", CFG_PUBLIC_DRIVE ":/" INI_FILENAME);
+			return;
+		}
+		iniparser_dump_ini(cfgIni, f);
+		fclose(f);
+		while (1){
+		
+			num = iniparser_getint(cfgIni, "yingxue:chushui", 1);
+
+
+
+			printf("num111=%d\n", num);
+			sleep(1);
+		}
+
+
+
+	}*/
+	while (1){
+
+		num = iniparser_getint(cfgIni, "yingxue:chushui", 1);
+
+
+
+		printf("num222=%d\n", num);
+		sleep(1);
+	}
+	while (1);
+	
+
+}
 
 int SceneRun(void)
 {
@@ -3015,7 +3104,7 @@ int SceneRun(void)
 	//初始化锁
 	pthread_mutex_init(&msg_mutex, NULL);
 
-
+	//test_file_init();
     for (;;)
     {
         bool result = false;
@@ -3131,11 +3220,13 @@ int SceneRun(void)
 					/*if (curr_node_widget){
 						curr_node_widget->updown_cb(curr_node_widget, 0);
 					}*/
+					//test_file_read();
 					if (curr_node_widget){
 						get_rtc_cache_time(&curtime, NULL);
 					}
 					break;
 				case 1073741889:
+					//test_file_write();
 					if (curr_node_widget){
 						curr_node_widget->updown_cb(curr_node_widget, 1);
 					}
