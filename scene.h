@@ -328,6 +328,9 @@ void polling_welcom();
 
 void polling_main();
 
+//设置时间并且加锁
+void set_time_lock(unsigned char hour, unsigned char min);
+
 //设置出厂轮询
 void polling_layer1();
 

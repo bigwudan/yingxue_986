@@ -853,8 +853,7 @@ static void yure_yureshezhiLayer_widget_confirm_cb(struct node_widget *widget, u
 			//北京时间小时
 			else if ((strcmp(widget->name, "Background3") == 0) || (strcmp(widget->name, "Background4") == 0)){
 
-				pthread_mutex_lock(&msg_mutex);
-				printf("*********star lock\n");
+				
 				unsigned char hour = 0;
 				unsigned char min = 0;
 				struct timeval curr_time;
@@ -869,6 +868,11 @@ static void yure_yureshezhiLayer_widget_confirm_cb(struct node_widget *widget, u
 				t_widget = ituSceneFindWidget(&theScene, "Text43");
 				t_buf = ituTextGetString(t_widget);
 				min = atoi(t_buf);
+
+
+				set_time_lock(hour, min);
+
+/*				pthread_mutex_lock(&msg_mutex);
 				set_rtc_time(hour, min);
 				//设置缓存时间
 				get_rtc_time(&yingxue_base.cache_time, NULL);
@@ -876,7 +880,7 @@ static void yure_yureshezhiLayer_widget_confirm_cb(struct node_widget *widget, u
 				get_rtc_cache_time(&last_down_time, NULL);
 				//更新获取到数据的时间
 				get_rtc_cache_time(&rev_time, NULL);
-				pthread_mutex_unlock(&msg_mutex);
+				pthread_mutex_unlock(&msg_mutex);*/
 
 			}
 			widget->state = 0;
@@ -3023,6 +3027,22 @@ test_write_file()
 	}
 	while (1);
 	
+
+}
+
+//设置时间并且加锁
+void 
+set_time_lock(unsigned char hour, unsigned char min)
+{
+	pthread_mutex_lock(&msg_mutex);
+	set_rtc_time(hour, min);
+	//设置缓存时间
+	get_rtc_time(&yingxue_base.cache_time, NULL);
+	//最后一次的时间
+	get_rtc_cache_time(&last_down_time, NULL);
+	//更新获取到数据的时间
+	get_rtc_cache_time(&rev_time, NULL);
+	pthread_mutex_unlock(&msg_mutex);
 
 }
 

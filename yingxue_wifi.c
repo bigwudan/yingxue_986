@@ -13,9 +13,7 @@ extern ITUScene  theScene;
 extern struct yingxue_base_tag yingxue_base;
 extern mqd_t toWifiQueue;
 extern pthread_mutex_t msg_mutex;
-extern struct   timeval rev_time;
 
-extern struct   timeval last_down_time;
 //测试数据
 const uint8_t test_buf[] = { 0xfc, 0x00, 0x01, 0x08, 0x01, 0x06 };
 //const uint8_t test_buf[] = { 0xfc, 0x00, 0x00, 0x00, 0xfc };
@@ -94,13 +92,13 @@ yingxue_wifi_data_check(struct wifi_cache_tag *wifi_cache, struct wifi_frame_tag
 	}
 
 	//打印
-	printf("wifi rec:");
+	/*printf("wifi rec:");
 
 	printf("cmd=0x%02X,data=", wifi_frame->command);
 	for (int i = 0; i < wifi_frame->data_len; i++){
 		printf("0x%02X ", wifi_frame->data[i]);
 	}
-	printf(" end\n");
+	printf(" end\n");*/
 	CLEAN_WIFI_CACHE(wifi_cache);
 	return 1;
 }
@@ -463,12 +461,9 @@ yingxue_wifi_task()
 			int hour_t = wifi_frame_g.data[8];
 			int sec_t = wifi_frame_g.data[9];
 
+			set_time_lock(hour_t, sec_t);
 
-
-
-			pthread_mutex_lock(&msg_mutex);
-			printf("*********star lock\n");
-
+			/*pthread_mutex_lock(&msg_mutex);
 			set_rtc_time(hour_t, sec_t);
 			//设置缓存时间
 			get_rtc_time(&yingxue_base.cache_time, NULL);
@@ -476,7 +471,7 @@ yingxue_wifi_task()
 			get_rtc_cache_time(&last_down_time, NULL);
 			//更新获取到数据的时间
 			get_rtc_cache_time(&rev_time, NULL);
-			pthread_mutex_unlock(&msg_mutex);
+			pthread_mutex_unlock(&msg_mutex);*/
 
 
 			
@@ -618,11 +613,11 @@ yingxue_wifi_senduart(struct wifi_uart_mq_tag *wifi_uart_mq)
 #else
 	//发送串口数据
 	len = write(UART_PORT_WIFI, wifi_uart_mq->data, wifi_uart_mq->len);
-	printf(" wifi send:%d\n", len);
+	/*printf(" wifi send:%d\n", len);
 	for (int i = 0; i < wifi_uart_mq->len; i++){
 		printf("0x%02X ", wifi_uart_mq->data[i]);
 	}
-	printf(" end\r\n");
+	printf(" end\r\n");*/
 #endif
 	return;
 }
