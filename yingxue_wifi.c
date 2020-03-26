@@ -37,6 +37,8 @@ struct wifi_cache_tag wifi_cache_g;
 struct wifi_frame_tag wifi_frame_g;
 //定义一个wifi基础信息
 struct wifi_base_tag wifi_base_g;
+//是否已经校队时间
+int proof_time = 0;
 
 //初始化wifi
 void 
@@ -88,13 +90,13 @@ yingxue_wifi_data_check(struct wifi_cache_tag *wifi_cache, struct wifi_frame_tag
 	}
 
 	//打印
-	/*printf("wifi rec:");
+	printf("wifi rec:");
 
 	printf("cmd=0x%02X,data=", wifi_frame->command);
 	for (int i = 0; i < wifi_frame->data_len; i++){
 		printf("0x%02X ", wifi_frame->data[i]);
 	}
-	printf(" end\n");*/
+	printf(" end\n");
 	CLEAN_WIFI_CACHE(wifi_cache);
 	return 1;
 }
@@ -408,7 +410,7 @@ yingxue_wifi_task()
 	int flag = 0;
 	//获得串口数据
 	flag = yingxue_wifi_data_from_wifi();
-
+	struct wifi_uart_mq_tag wifi_uart_mq;
 	if (flag == 1){
 		//解析数据
 		//是否是ack回复
@@ -422,6 +424,21 @@ yingxue_wifi_task()
 		//心跳
 		else if (wifi_frame_g.command == WIFI_CMD_HEART){
 			wifi_base_g.online_state = wifi_frame_g.data[0];
+			//如果没有校队过温度，并且第一次连接上，启动校队时间
+			if (proof_time == 0 && (wifi_base_g.online_state & 0x01)){
+				//发送校队时间
+				//马上发送 fc 00 00 0b 07
+				wifi_uart_mq.data[0] = 0xfc;
+				wifi_uart_mq.data[1] = 0x00;
+				wifi_uart_mq.data[2] = 0x00;
+				wifi_uart_mq.data[3] = 0x0b;
+				wifi_uart_mq.data[4] = 0x07;
+				wifi_uart_mq.len = 5;
+				yingxue_wifi_senduart(&wifi_uart_mq);
+				proof_time = 1;
+			}
+
+
 		}
 		//状态查询
 		else if (wifi_frame_g.command == WIFI_CMD_STATE_QUERY){
@@ -434,7 +451,15 @@ yingxue_wifi_task()
 		else if (wifi_frame_g.command == WIFI_CMD_STATE_CTR){
 			yingxue_wifi_process_command(&wifi_frame_g);
 		}
-	
+		//校队时间
+		else if (wifi_frame_g.command == WIFI_CMD_STATE_TIME){
+			int year_t = wifi_frame_g.data[5];
+			int month_t = wifi_frame_g.data[6];
+			int day_t = wifi_frame_g.data[7];
+			int hour_t = wifi_frame_g.data[8];
+			int sec_t = wifi_frame_g.data[9];
+			set_rtc_time(hour_t, sec_t);
+		}
 	}
 	//运行发送任务
 	yingxue_wifi_send_task();
@@ -487,7 +512,7 @@ yingxue_wifi_upstate()
 	}
 	else if (wifi_base_g.beg_upstate == 3){
 		cmd_data = yingxue_base.shezhi_temp;
-		printf("shezhe_tmp=0x%02X\n", cmd_data);
+		//printf("shezhe_tmp=0x%02X\n", cmd_data);
 		yingxue_wifi_to_wifi(WIFI_CMD_STATE_UP, 103, cmd_data);
 	}
 	else if (wifi_base_g.beg_upstate == 2){
@@ -570,11 +595,11 @@ yingxue_wifi_senduart(struct wifi_uart_mq_tag *wifi_uart_mq)
 #else
 	//发送串口数据
 	len = write(UART_PORT_WIFI, wifi_uart_mq->data, wifi_uart_mq->len);
-	/*printf(" wifi send:%d\n", len);
+	printf(" wifi send:%d\n", len);
 	for (int i = 0; i < wifi_uart_mq->len; i++){
 		printf("0x%02X ", wifi_uart_mq->data[i]);
 	}
-	printf(" end\r\n");*/
+	printf(" end\r\n");
 #endif
 	return;
 }
