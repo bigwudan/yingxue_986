@@ -93,7 +93,7 @@ uint8_t buzzer_voice_state = 0; //0Î´¿ªÆô 1¿ªÆô
 struct   timeval rev_time;
 
 //¼ÓËø
-static pthread_mutex_t msg_mutex = 0;//PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t msg_mutex = 0;//PTHREAD_MUTEX_INITIALIZER;
 
 extern char is_shake;
 

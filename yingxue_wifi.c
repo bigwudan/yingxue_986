@@ -12,6 +12,10 @@ extern mqd_t test_mq;
 extern ITUScene  theScene;
 extern struct yingxue_base_tag yingxue_base;
 extern mqd_t toWifiQueue;
+extern pthread_mutex_t msg_mutex;
+extern struct   timeval rev_time;
+
+extern struct   timeval last_down_time;
 //测试数据
 const uint8_t test_buf[] = { 0xfc, 0x00, 0x01, 0x08, 0x01, 0x06 };
 //const uint8_t test_buf[] = { 0xfc, 0x00, 0x00, 0x00, 0xfc };
@@ -458,7 +462,26 @@ yingxue_wifi_task()
 			int day_t = wifi_frame_g.data[7];
 			int hour_t = wifi_frame_g.data[8];
 			int sec_t = wifi_frame_g.data[9];
+
+
+
+
+			pthread_mutex_lock(&msg_mutex);
+			printf("*********star lock\n");
+
 			set_rtc_time(hour_t, sec_t);
+			//设置缓存时间
+			get_rtc_time(&yingxue_base.cache_time, NULL);
+			//最后一次的时间
+			get_rtc_cache_time(&last_down_time, NULL);
+			//更新获取到数据的时间
+			get_rtc_cache_time(&rev_time, NULL);
+			pthread_mutex_unlock(&msg_mutex);
+
+
+			
+
+
 		}
 	}
 	//运行发送任务
