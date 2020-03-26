@@ -773,7 +773,7 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 
 }
 
-
+int welcom_flag = 0;
 //轮询欢迎页面
 void 
 polling_welcom()
@@ -793,7 +793,11 @@ polling_welcom()
 			flag = 1; //开机中
 		}
 		else{
-			if (yingxue_base.cache_time.tv_sec >= rec_time.tv_sec + 2){
+			printf("*******line=%d,flag=%d,",__LINE__, flag);
+			printf("cache_time=%d,cache_time=%d,", yingxue_base.cache_time.tv_sec, yingxue_base.cache_time.tv_sec);
+			printf("rec_time=%d,rec_time=%d,", rec_time.tv_sec, rec_time.tv_sec);
+			printf("\n");
+			if (yingxue_base.cache_time.tv_sec >= rec_time.tv_sec){
 				printf("first close\n");
 				yingxue_base.run_state = 1;
 				ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
@@ -803,6 +807,7 @@ polling_welcom()
 	}
 	//关机
 	else if (yingxue_base.run_state == 2){
+		
 		//开机开始
 		if (flag == 2){
 			printf("open on\n");
@@ -822,7 +827,7 @@ polling_welcom()
 	}//开机
 	else if (yingxue_base.run_state == 1){
 		if (flag == 4){
-			printf("close on\n");
+			
 			ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_ON, NULL);
 			//开机
 			SEND_OPEN_CMD();
@@ -832,7 +837,7 @@ polling_welcom()
 		}
 		else if (5 == flag){
 			if (yingxue_base.cache_time.tv_sec >= rec_time.tv_sec + 2){
-				printf("close close\n");
+		
 				ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
 				flag = 2; //开机开始
 			}

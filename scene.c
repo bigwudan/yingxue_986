@@ -3071,7 +3071,12 @@ int SceneRun(void)
 		sleep(2);
 	}*/
 
+	struct timeval power_on_time; //每次轮询的缓存时间
 
+	get_rtc_time(&power_on_time, NULL);
+
+	//长按计数器
+	unsigned char long_time_count = 0;
 
 	//消息队列
 	//初始化队列
@@ -3151,49 +3156,55 @@ int SceneRun(void)
 		
 
 
-		//判断是否有错误代码
-		if (yingxue_base.is_err){
-			if (yingxue_base.err_no == 0xe0){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "E0Layer"));
-			}
-			else if (yingxue_base.err_no == 0xe1){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "E1Layer"));
-			}
-			else if (yingxue_base.err_no == 0xe2){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "E2Layer"));
-			}
-			else if (yingxue_base.err_no == 0xe3){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "E3Layer"));
-			}
-			else if (yingxue_base.err_no == 0xe4){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "E4Layer"));
-			}
-			else if (yingxue_base.err_no == 0xe5){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "E5Layer"));
-			}
-			else if (yingxue_base.err_no == 0xe6){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "E6Layer"));
-			}
-			else if (yingxue_base.err_no == 0xe7){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "E7Layer"));
-			}
-			else if (yingxue_base.err_no == 0xe8){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "E8Layer"));
-			}
-			else if (yingxue_base.err_no == 0xfd){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "H1Layer"));
-			}
-			else{
-				ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
-			}
+		//判断是否有错误代码.10秒后判读
+		if (power_on_time.tv_sec + 10 < yingxue_base.cache_time.tv_sec){
+			if (yingxue_base.is_err){
+				if (yingxue_base.err_no == 0xe0){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "E0Layer"));
+				}
+				else if (yingxue_base.err_no == 0xe1){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "E1Layer"));
+				}
+				else if (yingxue_base.err_no == 0xe2){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "E2Layer"));
+				}
+				else if (yingxue_base.err_no == 0xe3){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "E3Layer"));
+				}
+				else if (yingxue_base.err_no == 0xe4){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "E4Layer"));
+				}
+				else if (yingxue_base.err_no == 0xe5){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "E5Layer"));
+				}
+				else if (yingxue_base.err_no == 0xe6){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "E6Layer"));
+				}
+				else if (yingxue_base.err_no == 0xe7){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "E7Layer"));
+				}
+				else if (yingxue_base.err_no == 0xe8){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "E8Layer"));
+				}
+				else if (yingxue_base.err_no == 0xfd){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "H1Layer"));
+				}
+				else{
+					ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
+				}
 
-		}
-		//正常后返回
-		else{
-			if (yingxue_base.curr_layer == ERRORLAYER){
-				ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
 			}
+			//正常后返回
+			else{
+				if (yingxue_base.curr_layer == ERRORLAYER){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+				}
+			}
+		
 		}
+
+
+
 
 		//wifi模块通讯
 		yingxue_wifi_task();
@@ -3217,13 +3228,19 @@ int SceneRun(void)
 				//真实控制板按键
 					//case SDLK_UP:
 				case 1073741884:
-					/*if (curr_node_widget){
-						curr_node_widget->updown_cb(curr_node_widget, 0);
-					}*/
-					//test_file_read();
-					if (curr_node_widget){
-						get_rtc_cache_time(&curtime, NULL);
+				
+					if (yingxue_base.run_state == 2)
+					{
+						printf("send net\n");
+						yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
 					}
+					else if (curr_node_widget){
+						curr_node_widget->updown_cb(curr_node_widget, 0);
+					}
+					//test_file_read();
+					/*if (curr_node_widget){
+						get_rtc_cache_time(&curtime, NULL);
+					}*/
 					break;
 				case 1073741889:
 					//test_file_write();
@@ -3239,11 +3256,9 @@ int SceneRun(void)
 					break;
 				//关机
 				case 1073741885:
-					printf("send wifi_cmd_net 2\n");
-
-					yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
-
-
+					long_time_count++;
+					printf("long_time=%d\n", long_time_count);
+					//多次记录
 					//get_rtc_cache_time(&curtime, NULL);
 					break;
 				//键盘按键
@@ -3341,12 +3356,12 @@ int SceneRun(void)
 					test4_mq.data[4] = 0x00;
 					test4_mq.data[5] = 0x04;
 					test4_mq.data[6] = 0x00;
-					test4_mq.data[7] = 0x6d;//命令id
+					test4_mq.data[7] = 0x65;//命令id
 					test4_mq.data[8] = 0x00;
 					test4_mq.data[9] = 0x00;
 					test4_mq.data[10] = 0x00;
-					test4_mq.data[11] = 0x12;//命令数
-					test4_mq.data[12] = 0x24;
+					test4_mq.data[11] = 0x00;//命令数
+					test4_mq.data[12] = 0x74;
 
 
 
@@ -3354,15 +3369,27 @@ int SceneRun(void)
 					mq_timedsend(test_mq, &test4_mq, sizeof(struct wifi_uart_mq_tag), 1, NULL);
 					break;
 				case 54://键盘6
-					printf("show err\n");
-					//yingxue_base.is_err = 1;
-					
-					if (test_buf_1[4] == 0x00){
-						test_buf_1[4] = 0x04;
-					}
-					else{
-						test_buf_1[4] = 0x00;
-					}
+					printf("keypad 5\n");
+					//fc 00 08 07 00 04 00 12 00 00 00 03 24
+					struct wifi_uart_mq_tag test4_mq1;
+					test4_mq1.data[0] = 0xfc;
+					test4_mq1.data[1] = 0x00;
+					test4_mq1.data[2] = 0x08;
+					test4_mq1.data[3] = 0x07;
+					test4_mq1.data[4] = 0x00;
+					test4_mq1.data[5] = 0x04;
+					test4_mq1.data[6] = 0x00;
+					test4_mq1.data[7] = 0x65;//命令id
+					test4_mq1.data[8] = 0x00;
+					test4_mq1.data[9] = 0x00;
+					test4_mq1.data[10] = 0x00;
+					test4_mq1.data[11] = 0x01;//命令数
+					test4_mq1.data[12] = 0x71;
+
+
+
+					test4_mq1.len = 13;
+					mq_timedsend(test_mq, &test4_mq1, sizeof(struct wifi_uart_mq_tag), 1, NULL);
 					break;
 				case 55://按键7
 					//出厂设置
@@ -3415,14 +3442,14 @@ int SceneRun(void)
 				//向上按键长按
 				case 1073741884:
 					BUZZER_OPEN();
-					LONG_PRESS_TIME(t_time, curtime, t_curr);
+					/*LONG_PRESS_TIME(t_time, curtime, t_curr);
 					if ((yingxue_base.run_state == 2) && (t_curr >= 2)){
 						printf("send net\n");
 						yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
 					}
 					else if (curr_node_widget){
 						curr_node_widget->updown_cb(curr_node_widget, 0);
-					}
+					}*/
 					break;
 				//向下按键长按
 				case 1073741889:
@@ -3444,11 +3471,10 @@ int SceneRun(void)
 					break;
 					//放开关机长按
 				case 1073741885:
-					break;
 					BUZZER_OPEN();
-					LONG_PRESS_TIME(t_time, curtime, t_curr);
-					//长按
-					if (t_curr >= 2){
+					printf("long_time open=%d\n", long_time_count);
+					if (long_time_count >= LONG_TIME_COUNT_MAX){
+						
 						if (yingxue_base.run_state == 1){
 							yingxue_base.run_state = 2;
 						}
@@ -3457,6 +3483,7 @@ int SceneRun(void)
 						}
 						ituLayerGoto(ituSceneFindWidget(&theScene, "welcom"));
 					}
+					long_time_count = 0;
 					break;
 				case 1073741886:
 					BUZZER_OPEN();

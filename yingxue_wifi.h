@@ -106,4 +106,6 @@ void yingxue_wifi_send_task();
 void yingxue_wifi_task();
 //串口发送信息
 void yingxue_wifi_senduart(struct wifi_uart_mq_tag *wifi_uart_mq);
+
+void yingxue_wifi_to_wifi(enum wifi_command_state cmd_state, uint16_t state_id, uint32_t data);
 #endif

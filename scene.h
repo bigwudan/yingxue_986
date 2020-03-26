@@ -281,6 +281,8 @@ struct uart_data_tag{
 //蜂鸣器间隔时间
 #define BUZZER_DURING 3
 
+//最大长按时间
+#define LONG_TIME_COUNT_MAX 5
 
 #define MAX_CHAIN_NUM 50
 
