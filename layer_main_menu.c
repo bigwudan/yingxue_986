@@ -98,12 +98,13 @@ extern struct node_widget layer1_15;//ed
 extern struct yingxue_base_tag yingxue_base;
 
 //闪烁 0 不闪烁 1闪烁
-char is_shake;
+//char is_shake;
 
 //主页面初始化
 static void MainLayer_init()
 {
 	ITUWidget *t_widget = NULL;
+	char t_buf[100] = { 0 };
 	//隐藏wifi图标
 	t_widget = ituSceneFindWidget(&theScene, "Background15");
 	ituWidgetSetVisible(t_widget, false);
@@ -120,8 +121,14 @@ static void MainLayer_init()
 	t_widget = ituSceneFindWidget(&theScene, curr_node_widget->focus_back_name);
 	ituWidgetSetVisible(t_widget, false);
 	//初始化状态
-	yingxue_base.adjust_temp_state = 0;
-	is_shake = 0;
+	if (yingxue_base.adjust_temp_state == 2){
+		//在中间显示设置温度
+		t_widget = ituSceneFindWidget(&theScene, "Text17");
+		sprintf(t_buf, "%d", yingxue_base.shezhi_temp);
+		ituTextSetString(t_widget, t_buf);
+	}
+
+	//yingxue_base.adjust_temp_state = 0;
 
 	//预热模式 0 预热 1单巡航 2全天候巡航 3下次预热时间
 	t_widget = ituSceneFindWidget(&theScene, "yureSprite");
@@ -845,9 +852,9 @@ polling_welcom()
 	}
 }
 
-//轮询欢迎页面
-void
-polling_main()
+//轮询欢迎页面备份
+/*void
+polling_main_bak()
 {
 	//1秒运行一次
 	static struct timeval last_tm;
@@ -865,7 +872,9 @@ polling_main()
 	if (is_shake == 1){
 		//得到当前时间
 		if (yingxue_base.adjust_temp_state == 1){
-			memmove(&during_tm, &yingxue_base.cache_time,  sizeof(struct timeval));
+
+			get_rtc_cache_time(&during_tm, NULL);
+			//memmove(&during_tm, &yingxue_base.cache_time,  sizeof(struct timeval));
 		}
 		//开始闪烁
 		yingxue_base.adjust_temp_state = 2;
@@ -1006,7 +1015,196 @@ polling_main()
 		}
 	}
 	//get_rtc_time(&last_tm, NULL);
-	memmove(&last_tm, &yingxue_base.cache_time, sizeof(struct timeval));
+	//memmove(&last_tm, &yingxue_base.cache_time, sizeof(struct timeval));
+	get_rtc_cache_time(&last_tm, NULL);
+
+}*/
+
+
+//轮询欢迎页面
+void
+polling_main()
+{
+	//1秒运行一次
+	static struct timeval last_tm;
+	//闪烁的时间
+	static struct timeval during_tm;
+	//struct timeval now_tm;
+	char t_buf[20] = { 0 };
+	ITUWidget* t_widget;
+	//get_rtc_time(&now_tm, NULL);
+	if (yingxue_base.cache_time.tv_sec < last_tm.tv_sec + 1){
+		return true;
+	}
+	
+	//在0普通状态下面，或者4解除锁定上下移动状态，需要更新状态值
+	if (yingxue_base.adjust_temp_state == 0 || yingxue_base.adjust_temp_state == 4){
+		//显示出水温度
+		sprintf(t_buf, "%d", yingxue_base.chushui_temp);
+		t_widget = ituSceneFindWidget(&theScene, "Text17");
+		ituTextSetString(t_widget, t_buf);
+
+		//显示wifi
+		if (wifi_base_g.online_state & 0x01){
+			t_widget = ituSceneFindWidget(&theScene, "Background15");
+			ituWidgetSetVisible(t_widget, true);
+		}
+		else{
+			t_widget = ituSceneFindWidget(&theScene, "Background15");
+			ituWidgetSetVisible(t_widget, false);
+		}
+
+		//Background34
+		if (yingxue_base.state_show & 0x01){
+			//显示
+			t_widget = ituSceneFindWidget(&theScene, "Background34");
+			ituWidgetSetVisible(t_widget, true);
+
+		}
+		else{
+			//不显示
+			t_widget = ituSceneFindWidget(&theScene, "Background34");
+			ituWidgetSetVisible(t_widget, false);
+		}
+
+		//Background35
+		if (yingxue_base.state_show & 0x04){
+			//显示
+			t_widget = ituSceneFindWidget(&theScene, "Background35");
+			ituWidgetSetVisible(t_widget, true);
+
+		}
+		else{
+			//不显示
+			t_widget = ituSceneFindWidget(&theScene, "Background35");
+			ituWidgetSetVisible(t_widget, false);
+		}
+
+		//Background36
+		if (yingxue_base.state_show & 0x02){
+			//显示
+			t_widget = ituSceneFindWidget(&theScene, "Background36");
+			ituWidgetSetVisible(t_widget, true);
+
+		}
+		else{
+			//不显示
+			t_widget = ituSceneFindWidget(&theScene, "Background36");
+			ituWidgetSetVisible(t_widget, false);
+		}
+
+
+		//模式 0 常规 1超热 2 eco 3水果
+
+		//根据设置温度判断模式
+		/*
+		当温度在下面范围时，自动显示相应模式。
+		超温洗51~65℃；
+		常规浴43~50℃；
+		ECO39~42℃；
+		果蔬洗35~38℃。
+		*/
+		yingxue_base.shezhi_temp = 43;
+		if (yingxue_base.shezhi_temp >= 51 && yingxue_base.shezhi_temp <= 65){
+			yingxue_base.moshi_mode = 2;
+		}
+		else if (yingxue_base.shezhi_temp >= 43 && yingxue_base.shezhi_temp <= 50){
+			yingxue_base.moshi_mode = 1;
+		}
+		else if (yingxue_base.shezhi_temp >= 39 && yingxue_base.shezhi_temp <= 42){
+			yingxue_base.moshi_mode = 3;
+		}
+		else if (yingxue_base.shezhi_temp >= 35 && yingxue_base.shezhi_temp <= 38){
+			yingxue_base.moshi_mode = 4;
+		}
+
+
+
+		t_widget = ituSceneFindWidget(&theScene, "moshiSprite");
+
+		if (yingxue_base.moshi_mode == 0 || yingxue_base.moshi_mode == 1){
+			ituSpriteGoto(t_widget, 0);
+		}
+		else if (yingxue_base.moshi_mode == 2){
+			ituSpriteGoto(t_widget, 1);
+		}
+		else if (yingxue_base.moshi_mode == 3){
+			ituSpriteGoto(t_widget, 2);
+		}
+		else if (yingxue_base.moshi_mode == 4){
+			ituSpriteGoto(t_widget, 3);
+		}
+
+		//预热模式 0 预热 1单巡航 2全天候巡航 3下次预热时间
+		t_widget = ituSceneFindWidget(&theScene, "yureSprite");
+
+		if (yingxue_base.yure_mode == 0){
+			ituSpriteGoto(t_widget, 0);
+		}
+		else if (yingxue_base.yure_mode == 1){
+			ituSpriteGoto(t_widget, 1);
+		}
+		else if (yingxue_base.yure_mode == 2){
+			ituSpriteGoto(t_widget, 2);
+		}
+		else if (yingxue_base.yure_mode == 3){
+			int beg = 0;
+			int end = 0;
+			char t_buf[100] = { 0 };
+			//计算下次预热时间
+			calcNextYure(&beg, &end);
+			if (beg == -1){
+				beg = 0;
+				end = 0;
+				sprintf(t_buf, "%d:00--%d:00", beg, end);
+			}
+			else{
+				sprintf(t_buf, "%d:00--%d:59", beg, end);
+			}
+			ituTextSetString(ituSceneFindWidget(&theScene, "Text35"), t_buf);
+			ituSpriteGoto(t_widget, 3);
+
+		}
+	
+	
+	}
+	//如果在调整中
+	else if (yingxue_base.adjust_temp_state == 1){
+	
+	
+	}
+	//开始闪烁
+	else if (yingxue_base.adjust_temp_state == 2){
+		//记录开始闪烁的时间
+		//并且转变状态
+		get_rtc_cache_time(&during_tm, NULL);
+		yingxue_base.adjust_temp_state = 3;
+
+	}
+	//闪烁中，开始闪烁，并且判断是否超时，回到状态0中
+	else if (yingxue_base.adjust_temp_state == 3){
+
+
+
+		//如果超时，跳转状态0中
+		if (yingxue_base.cache_time.tv_sec >= (during_tm.tv_sec) + 5){
+			yingxue_base.adjust_temp_state = 0;
+		}
+		//开始闪烁
+		else{
+			t_widget = (ITUWidget*)ituSceneFindWidget(&theScene, "Text17");
+			if (t_widget){
+				if (t_widget->visible == 0){
+					ituWidgetSetVisible(t_widget, true);
+				}
+				else{
+					ituWidgetSetVisible(t_widget, false);
+				}
+			}
+		}
+	}
+	//更新最后一次时间
+	get_rtc_cache_time(&last_tm, NULL);
 
 }
 
@@ -1080,162 +1278,6 @@ void polling_err()
 bool MainLayerOnTimer(ITUWidget* widget, char* param)
 {
 	return true;
-	//1秒运行一次
-	static struct timeval last_tm;
-	//闪烁的时间
-	static struct timeval during_tm;
-	struct timeval now_tm;
-	char t_buf[20] = { 0 };
-	ITUWidget* t_widget;
-	get_rtc_time(&now_tm, NULL);
-	if (now_tm.tv_sec < last_tm.tv_sec + 1){
-		return true;
-	}
-
-	//如何闪烁
-	if (is_shake == 1){
-		//得到当前时间
-		if (yingxue_base.adjust_temp_state == 1){
-			get_rtc_time(&during_tm, NULL);
-		}
-		//开始闪烁
-		yingxue_base.adjust_temp_state = 2;
-		t_widget = (ITUWidget*)ituSceneFindWidget(&theScene, "Text17");
-		//大于7秒，闪烁结束
-		if (now_tm.tv_sec > during_tm.tv_sec + 5){
-			yingxue_base.adjust_temp_state = 0;
-			if (t_widget->visible == 0){
-				ituWidgetSetVisible(t_widget, true);
-			}
-			//时间归零
-			memset(&during_tm, 0, sizeof(struct timeval));
-			//初始化
-			yingxue_base.adjust_temp_state = 0;
-			is_shake = 0;
-			//显示出水温度
-			sprintf(t_buf, "%d", yingxue_base.chushui_temp);
-			ituWidgetSetVisible(t_widget, true);
-			t_widget = ituSceneFindWidget(&theScene, "Text17");
-			ituTextSetString(t_widget, t_buf);
-		}
-		else{
-			if (t_widget){
-				if (t_widget->visible == 0){
-					ituWidgetSetVisible(t_widget, true);
-				}
-				else{
-					ituWidgetSetVisible(t_widget, false);
-				}
-			}
-		}
-	}
-	else{
-		if (yingxue_base.adjust_temp_state == 0 || yingxue_base.adjust_temp_state == 3){
-			//显示出水温度
-			sprintf(t_buf, "%d", yingxue_base.chushui_temp);
-			t_widget = ituSceneFindWidget(&theScene, "Text17");
-			ituTextSetString(t_widget, t_buf);
-
-			//显示wifi
-			if (wifi_base_g.online_state & 0x01){
-				t_widget = ituSceneFindWidget(&theScene, "Background15");
-				ituWidgetSetVisible(t_widget, true);
-			}
-			else{
-				t_widget = ituSceneFindWidget(&theScene, "Background15");
-				ituWidgetSetVisible(t_widget, false);
-			}
-
-			//Background34
-			if (yingxue_base.state_show & 0x01){
-				//显示
-				t_widget = ituSceneFindWidget(&theScene, "Background34");
-				ituWidgetSetVisible(t_widget, true);
-
-			}
-			else{
-				//不显示
-				t_widget = ituSceneFindWidget(&theScene, "Background34");
-				ituWidgetSetVisible(t_widget, false);
-			}
-
-			//Background35
-			if (yingxue_base.state_show & 0x04){
-				//显示
-				t_widget = ituSceneFindWidget(&theScene, "Background35");
-				ituWidgetSetVisible(t_widget, true);
-
-			}
-			else{
-				//不显示
-				t_widget = ituSceneFindWidget(&theScene, "Background35");
-				ituWidgetSetVisible(t_widget, false);
-			}
-
-			//Background36
-			if (yingxue_base.state_show & 0x02){
-				//显示
-				t_widget = ituSceneFindWidget(&theScene, "Background36");
-				ituWidgetSetVisible(t_widget, true);
-
-			}
-			else{
-				//不显示
-				t_widget = ituSceneFindWidget(&theScene, "Background36");
-				ituWidgetSetVisible(t_widget, false);
-			}
-
-
-			//模式 0 常规 1超热 2 eco 3水果
-			t_widget = ituSceneFindWidget(&theScene, "moshiSprite");
-
-			if (yingxue_base.moshi_mode == 0 || yingxue_base.moshi_mode == 1){
-				ituSpriteGoto(t_widget, 0);
-			}
-			else if (yingxue_base.moshi_mode == 2){
-				ituSpriteGoto(t_widget, 1);
-			}
-			else if (yingxue_base.moshi_mode == 3){
-				ituSpriteGoto(t_widget, 2);
-			}
-			else if (yingxue_base.moshi_mode == 4){
-				ituSpriteGoto(t_widget, 3);
-			}
-
-			//预热模式 0 预热 1单巡航 2全天候巡航 3下次预热时间
-			t_widget = ituSceneFindWidget(&theScene, "yureSprite");
-
-			if (yingxue_base.yure_mode == 0){
-				ituSpriteGoto(t_widget, 0);
-			}
-			else if (yingxue_base.yure_mode == 1){
-				ituSpriteGoto(t_widget, 1);
-			}
-			else if (yingxue_base.yure_mode == 2){
-				ituSpriteGoto(t_widget, 2);
-			}
-			else if (yingxue_base.yure_mode == 3){
-				int beg = 0;
-				int end = 0;
-				char t_buf[100] = { 0 };
-				//计算下次预热时间
-				calcNextYure(&beg, &end);
-				if (beg == -1){
-					beg = 0;
-					end = 0;
-					sprintf(t_buf, "%d:00--%d:00", beg, end);
-				}
-				else{
-					sprintf(t_buf, "%d:00--%d:59", beg, end);
-				}
-				ituTextSetString(ituSceneFindWidget(&theScene, "Text35"), t_buf);
-				ituSpriteGoto(t_widget, 3);
-
-			}
-		}
-	}
-	get_rtc_time(&last_tm, NULL);
-	return true;
 }
 
 extern 	uint8_t buzzer_voice_state ;
@@ -1245,66 +1287,14 @@ extern 	uint8_t	buzzer_voice_num;
 bool WelcomeOnTimer(ITUWidget* widget, char* param)
 {
 	return true;
-	//是否已经动作
-	static unsigned char flag;
-	static unsigned char count;
-	//第一次上电
-	if (yingxue_base.run_state == 0){
-		if (count == 0){
-			//发送开机
-			SEND_OPEN_CMD();
-		}
-		count++;
-		if (count == 200){
-			yingxue_base.run_state = 1;
-			ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
-
-		}
-	}
-	//关机
-	else if (yingxue_base.run_state == 2){
-		if (flag != 2){
-			//sleep(2);
-			//关机
-			SEND_CLOSE_CMD();
-			flag = 2;
-			//计算延迟时间
-			count = 0;
-		}
-		else{
-			//count += 1;
-			if (count == 0){
-				BUZZER_CLOSE(1);
-				count = 1;
-				sleep(2);
-				ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_OFF, NULL);
-			}
-		}
-	}//开机
-	else if (yingxue_base.run_state == 1){
-		if (flag != 1){
-			ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_ON, NULL);
-			//开机
-			SEND_OPEN_CMD();
-			BUZZER_CLOSE(1);
-			sleep(2);
-			ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
-			flag = 1;
-		}
-	}
-	return true;
+	
 }
 
 //ERROnTimer
 bool ERROnTimer(ITUWidget* widget, char* param)
 {
 	return true;
-	sleep(2);
-	if (yingxue_base.is_err == 0){
-		printf("err =0\r\n");
-		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
-	}
-	return true;
+
 }
 
 void MainMenuReset(void)

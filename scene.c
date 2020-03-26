@@ -95,7 +95,7 @@ struct   timeval rev_time;
 //加锁
 pthread_mutex_t msg_mutex = 0;//PTHREAD_MUTEX_INITIALIZER;
 
-extern char is_shake;
+//extern char is_shake;
 
 static const unsigned short crc16tab[256] = {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -590,9 +590,9 @@ static void main_widget_confirm_cb(struct node_widget *widget, unsigned char sta
 	ITUWidget *t_widget = NULL;
 	//如何状态下后可以点击，然后上下移动
 	if (yingxue_base.adjust_temp_state < 3){
-		//闪烁停止
-		is_shake = 0;
-		yingxue_base.adjust_temp_state = 3;
+		//解锁，可以上下移动
+		yingxue_base.adjust_temp_state = 4;
+		//yingxue_base.adjust_temp_state = 3;
 		//选中框出现
 		t_widget = ituSceneFindWidget(&theScene, curr_node_widget->focus_back_name);
 		ituWidgetSetVisible(t_widget, true);
@@ -626,8 +626,8 @@ static void main_widget_up_down_cb(struct node_widget *widget, unsigned char sta
 	struct node_widget *t_node_widget = NULL;
 	struct ITUWidget *t_widget = NULL;
 	char t_buf[20] = { 0 };
-	//只有状态3才可以上下调整
-	if (yingxue_base.adjust_temp_state == 3){
+	//只有状态4才可以上下调整
+	if (yingxue_base.adjust_temp_state == 4){
 		if (state == 0){
 			if (widget->up)
 				t_node_widget = widget->up;
@@ -933,6 +933,7 @@ static void moshi_widget_confirm_cb(struct node_widget *widget, unsigned char st
 		yingxue_base.moshi_mode = 1;
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
+		yingxue_base.adjust_temp_state = 2;
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton11") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
@@ -940,6 +941,7 @@ static void moshi_widget_confirm_cb(struct node_widget *widget, unsigned char st
 		yingxue_base.moshi_mode = 2;
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
+		yingxue_base.adjust_temp_state = 2;
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton12") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
@@ -947,6 +949,7 @@ static void moshi_widget_confirm_cb(struct node_widget *widget, unsigned char st
 		yingxue_base.moshi_mode = 3;
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
+		yingxue_base.adjust_temp_state = 2;
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton13") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
@@ -954,6 +957,7 @@ static void moshi_widget_confirm_cb(struct node_widget *widget, unsigned char st
 		yingxue_base.moshi_mode = 4;
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
+		yingxue_base.adjust_temp_state = 2;
 	}
 }
 
@@ -1007,6 +1011,7 @@ static void chushui_widget_confirm_cb(struct node_widget *widget, unsigned char 
 	t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 	if (strcmp(widget->name, "chushui_BackgroundButton73") == 0){
 		ituLayerGoto((ITULayer *)t_widget);
+		yingxue_base.adjust_temp_state = 2;
 	}
 	//支持长按
 	else if (widget->type == 1){
@@ -2004,7 +2009,7 @@ static void node_widget_init()
 
 //ok
 //是否闪烁
-extern char is_shake;
+//extern char is_shake;
 
 //超时的处理函数
 static void over_time_process()
@@ -2016,9 +2021,9 @@ static void over_time_process()
 	//如何当前的时间大于3秒
 	if (now_t.tv_sec > last_down_time.tv_sec + 3){
 
-		//如果是调整温度,给闪烁
+		//如果是调整温度，超时,状态开始闪烁,
 		if (yingxue_base.adjust_temp_state == 1){
-			is_shake = 1;
+			yingxue_base.adjust_temp_state = 2;
 			memset(&last_down_time, 0, sizeof(struct timeval));
 			//已经处理过
 			is_deal_over_time = 1;
