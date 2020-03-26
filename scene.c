@@ -3222,25 +3222,17 @@ int SceneRun(void)
                 result = ituSceneUpdate(&theScene, ITU_EVENT_KEYDOWN, ev.key.keysym.sym, 0, 0);
 				//按键处理事件
 				key_down_process();
-				printf("down_key=%lu\n", ev.key.keysym.sym);
+				printf("down_key1=%lu\n", ev.key.keysym.sym);
                 switch (ev.key.keysym.sym)
                 {
 				//真实控制板按键
 					//case SDLK_UP:
 				case 1073741884:
-				
-					if (yingxue_base.run_state == 2)
-					{
-						printf("send net\n");
-						yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
-					}
-					else if (curr_node_widget){
+					if (curr_node_widget && yingxue_base.run_state != 2){
 						curr_node_widget->updown_cb(curr_node_widget, 0);
-					}
-					//test_file_read();
-					/*if (curr_node_widget){
-						get_rtc_cache_time(&curtime, NULL);
-					}*/
+					 }
+					//长按
+					long_time_count++;
 					break;
 				case 1073741889:
 					//test_file_write();
@@ -3248,6 +3240,12 @@ int SceneRun(void)
 						curr_node_widget->updown_cb(curr_node_widget, 1);
 					}
 					break;
+				//up down同时按下
+				case 1073741886:
+					long_time_count++;
+					break;
+
+
 				//确定
 				case 1073741883:
 					if (curr_node_widget){
@@ -3257,10 +3255,10 @@ int SceneRun(void)
 				//关机
 				case 1073741885:
 					long_time_count++;
-					printf("long_time=%d\n", long_time_count);
-					//多次记录
-					//get_rtc_cache_time(&curtime, NULL);
 					break;
+
+
+
 				//键盘按键
                 case SDLK_UP:
 					curr_node_widget->updown_cb(curr_node_widget, 0);
@@ -3433,7 +3431,7 @@ int SceneRun(void)
 
             case SDL_KEYUP:
                 result = ituSceneUpdate(&theScene, ITU_EVENT_KEYUP, ev.key.keysym.sym, 0, 0);
-				printf("keyup_key=%lu\n", ev.key.keysym.sym);
+				printf("keyup_key1=%lu\n", ev.key.keysym.sym);
 				unsigned long t_curr = 0;
 				struct timeval t_time = { 0 };
 				switch (ev.key.keysym.sym)
@@ -3442,14 +3440,15 @@ int SceneRun(void)
 				//向上按键长按
 				case 1073741884:
 					BUZZER_OPEN();
-					/*LONG_PRESS_TIME(t_time, curtime, t_curr);
-					if ((yingxue_base.run_state == 2) && (t_curr >= 2)){
+					printf("long_time_count=%d,run_state=%d\n", long_time_count, yingxue_base.run_state);
+					if (yingxue_base.run_state == 2 && long_time_count >= LONG_TIME_COUNT_MAX)
+					{
+						
 						printf("send net\n");
 						yingxue_wifi_to_wifi(WIFI_CMD_NET, 0, 0);
 					}
-					else if (curr_node_widget){
-						curr_node_widget->updown_cb(curr_node_widget, 0);
-					}*/
+
+					long_time_count = 0;
 					break;
 				//向下按键长按
 				case 1073741889:
@@ -3472,7 +3471,6 @@ int SceneRun(void)
 					//放开关机长按
 				case 1073741885:
 					BUZZER_OPEN();
-					printf("long_time open=%d\n", long_time_count);
 					if (long_time_count >= LONG_TIME_COUNT_MAX){
 						
 						if (yingxue_base.run_state == 1){
@@ -3488,10 +3486,10 @@ int SceneRun(void)
 				case 1073741886:
 					BUZZER_OPEN();
 					//出厂设置
-					if (curr_node_widget){
+					if (curr_node_widget && long_time_count >= LONG_TIME_COUNT_MAX){
 						ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
 					}
-					
+					long_time_count = 0;
 					break;
 				}
 
