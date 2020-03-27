@@ -159,7 +159,7 @@ struct moshi_data{
 
 //樱雪基础数据
 struct yingxue_base_tag{
-	unsigned char adjust_temp_state; // 0默认状态,可以上下调整温度 1正在调整中 2闪烁开始 3闪烁中 4解除锁定，可以上下移动
+	unsigned char adjust_temp_state; // 0默认状态，没有闪烁,但是可以上下调整温度，触发后进入状态1， 1闪烁中，可以上下调整 2闪烁关闭开始 3闪烁关闭中，闪烁一直 4解除锁定，可以上下移动
 	unsigned char shezhi_temp; //设置温度
 	unsigned char run_state; //0第一次上电 1开机 2关机
 	unsigned char state_show;//第0位 有水  第1位 风机 第2位 火焰 第3位 风压

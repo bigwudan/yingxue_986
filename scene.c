@@ -95,7 +95,7 @@ struct   timeval rev_time;
 //加锁
 pthread_mutex_t msg_mutex = 0;//PTHREAD_MUTEX_INITIALIZER;
 
-//extern char is_shake;
+int is_layer = 0;//是否是从工厂设置模式进去
 
 static const unsigned short crc16tab[256] = {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -503,6 +503,10 @@ static void lock_widget_up_down(struct node_widget *widget, unsigned char state)
 		if (style == BEIJING_SHIJIAN_H && (t_num < 0 || t_num >= 24)){
 			return;
 		}
+		//分钟0-59
+		if (style == BEIJING_SHIJIAN_M && (t_num < 0 || t_num > 59)){
+			return;
+		}
 	}
 	else if (style == CHUSHUI_TEMP){
 		//设置温度 模式设置	4	模式设置	设置温度	定升设定
@@ -589,16 +593,7 @@ static void main_widget_confirm_cb(struct node_widget *widget, unsigned char sta
 
 	ITUWidget *t_widget = NULL;
 	//如何状态下后可以点击，然后上下移动
-	if (yingxue_base.adjust_temp_state < 3){
-		//解锁，可以上下移动
-		yingxue_base.adjust_temp_state = 4;
-		//yingxue_base.adjust_temp_state = 3;
-		//选中框出现
-		t_widget = ituSceneFindWidget(&theScene, curr_node_widget->focus_back_name);
-		ituWidgetSetVisible(t_widget, true);
-	}
-	else
-	{
+	if (yingxue_base.adjust_temp_state == 4){
 		if (strcmp(widget->name, "BackgroundButton47") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 			ituLayerGoto((ITULayer *)t_widget);
@@ -615,6 +610,15 @@ static void main_widget_confirm_cb(struct node_widget *widget, unsigned char sta
 			t_widget = ituSceneFindWidget(&theScene, "chushui");
 			ituLayerGoto((ITULayer *)t_widget);
 		}
+
+	}
+	else{
+		//解锁，可以上下移动
+		yingxue_base.adjust_temp_state = 4;
+		//选中框出现
+		t_widget = ituSceneFindWidget(&theScene, curr_node_widget->focus_back_name);
+		ituWidgetSetVisible(t_widget, true);
+
 	}
 
 }
@@ -643,7 +647,7 @@ static void main_widget_up_down_cb(struct node_widget *widget, unsigned char sta
 	}
 	else{
 		//可以上下调整温度
-		if (yingxue_base.adjust_temp_state == 0 || yingxue_base.adjust_temp_state == 1){
+		if (yingxue_base.adjust_temp_state == 0 || yingxue_base.adjust_temp_state == 1 || yingxue_base.adjust_temp_state == 2){
 			//如果才开始调整
 			if (yingxue_base.adjust_temp_state == 0){
 				yingxue_base.adjust_temp_state = 1;
@@ -658,7 +662,7 @@ static void main_widget_up_down_cb(struct node_widget *widget, unsigned char sta
 
 			//温度范围
 			if (count_idx < 0 || count_idx > 65){
-				return ;
+				return;
 			}
 
 
@@ -752,7 +756,7 @@ static void yure_widget_confirm_cb(struct node_widget *widget, unsigned char sta
 		ituLayerGoto((ITULayer *)t_widget);
 
 	}
-
+	yingxue_base.adjust_temp_state = 0;
 }
 
 //预热页面上下移动
@@ -3220,7 +3224,16 @@ int SceneRun(void)
 			//正常后返回
 			else{
 				if (yingxue_base.curr_layer == ERRORLAYER){
-					ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+
+					if (is_layer == 1){
+						ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
+					}
+					else{
+						ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+					
+					}
+
+
 				}
 			}
 		
@@ -3510,6 +3523,7 @@ int SceneRun(void)
 					BUZZER_OPEN();
 					//出厂设置
 					if (curr_node_widget && long_time_count >= LONG_TIME_COUNT_MAX){
+						is_layer = 1;
 						ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
 					}
 					long_time_count = 0;
