@@ -494,7 +494,7 @@ static void lock_widget_up_down(struct node_widget *widget, unsigned char state)
 
 	//判断范围
 	//回水温差范围
-	if (style == HUISHUI_TEMP && (t_num < 0 || t_num >= 16)){
+	if (style == HUISHUI_TEMP && (t_num <= 0 || t_num >= 16)){
 		return;
 	}
 	//设置北京时间
@@ -2030,10 +2030,8 @@ static void over_time_process()
 		}
 		else{
 			if (curr_node_widget && (now_t.tv_sec > (last_down_time.tv_sec + 10))){
-
-
 				printf("now:%d,last=%d\n", now_t.tv_sec, last_down_time.tv_sec);
-				if (strcmp(curr_node_widget->name, "BackgroundButton3") != 0){
+				if (strcmp(curr_node_widget->name, "BackgroundButton3") != 0 && yingxue_base.curr_layer != LAYER1){
 					ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
 				}
 				memset(&last_down_time, 0, sizeof(struct timeval));
@@ -2324,8 +2322,8 @@ static void* UartFunc(void* arg)
 			//已经完成
 			if (uart_data.state == 2){
 
-				//LOG_RECE_UART(uart_data.buf_data);
-				//printf("\n\n");
+				LOG_RECE_UART(uart_data.buf_data);
+				printf("\n\n");
 
 				//打印结束
 				is_has = 0;

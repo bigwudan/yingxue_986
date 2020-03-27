@@ -1104,7 +1104,6 @@ polling_main()
 		ECO39~42℃；
 		果蔬洗35~38℃。
 		*/
-		yingxue_base.shezhi_temp = 43;
 		if (yingxue_base.shezhi_temp >= 51 && yingxue_base.shezhi_temp <= 65){
 			yingxue_base.moshi_mode = 2;
 		}
