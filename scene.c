@@ -3507,6 +3507,10 @@ int SceneRun(void)
 					//放开关机长按
 				case 1073741885:
 					BUZZER_OPEN();
+					is_layer = 1;
+					ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
+					printf("join layer\n");
+					break;
 					if (long_time_count >= LONG_TIME_COUNT_MAX){
 						
 						if (yingxue_base.run_state == 1){
