@@ -86,6 +86,44 @@ mqd_t test_mq;
 extern void ScreenSetDoubleClick(void);
 //樱雪crc效验数组
 
+
+#ifdef _WIN32
+
+
+unsigned char test_buf_1[68] = {
+	//[0][0] //[0][1]                                                 //erno
+	0xEA, 0x1B, 0x10, 0x4D, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x79, 0x53,
+	0xEA, 0x1B, 0x11, 0x01, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x48, 0x35,
+	0xEA, 0x1B, 0x12, 0x02, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30, 0x31, 0x05, 0x4B,
+	0xEA, 0x1B, 0x13, 0x03, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40, 0x41, 0xBE, 0x5F,
+};
+
+
+//win虚拟机测试
+static unsigned char win_test()
+{
+	/*  0xEA, 0x1B, 0x10, 0x4D, 0x00, 0x00, 0x00, 0x2D, 0x00, 0x00, 0x00, 0x00, 0x41, 0x00, 0x00, 0x79, 0x53,
+	0xEA, 0x1B, 0x11, 0x01, 0x00, 0x00, 0x00, 0x1E, 0x0A, 0x2A, 0x28, 0x26, 0x2A, 0x00, 0x00, 0x48, 0x35,
+	0xEA, 0x1B, 0x12, 0x00, 0xCD, 0x80, 0x9E, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x05, 0x4B,
+	0xEA, 0x1B, 0x13, 0x00, 0x00, 0x05, 0x40, 0x50, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBE, 0x5F,*/
+	/*	unsigned char test_buf[68] = {
+	//[0][0] //[0][1]                                                 //erno
+	0xEA, 0x1B, 0x10, 0x4D, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x79, 0x53,
+	0xEA, 0x1B, 0x11, 0x01, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x48, 0x35,
+	0xEA, 0x1B, 0x12, 0x02, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30, 0x31, 0x05, 0x4B,
+	0xEA, 0x1B, 0x13, 0x03, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40, 0x41, 0xBE, 0x5F,
+	};*/
+	static int idx;
+	unsigned char res;
+
+	res = test_buf_1[idx++];
+	if (idx == 68){
+		idx = 0;
+	}
+	return res;
+}
+#endif
+
 uint8_t buzzer_voice_num = 0; //最高位为状态位 剩下两位计数器
 uint8_t buzzer_voice_state = 0; //0未开启 1开启
 
@@ -139,8 +177,7 @@ mqd_t childQueue = -1;
 //发送wifi模块数据
 mqd_t toWifiQueue = -1;
 
-//是否已经处理超时 0 未处理 1 已经处理
-unsigned char is_deal_over_time;
+
 
 //樱雪全局数据
 struct yingxue_base_tag yingxue_base;
@@ -447,10 +484,7 @@ static void key_down_process()
 	//最后一次的时间
 	get_rtc_cache_time(&last_down_time, NULL);
 
-	//更新获取到数据的时间
-	//get_rtc_cache_time(&rev_time, NULL);
-	//更新处理标识
-	is_deal_over_time = 0;
+
 }
 
 //锁定上下移动
@@ -1311,7 +1345,7 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 			//t_num = 0x01;
 			sendCmdToCtr(0x0A, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
-		//暂时废弃
+		//dh
 		else if (strcmp(widget->name, "Text90") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text90");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
@@ -1324,7 +1358,7 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 			sprintf(t_buf, "%02X", t_num);
 			ituTextSetString(t_widget, t_buf);
 
-			sendCmdToCtr(0x0B, t_num, 0, 0, 0, SET_CHUCHANG);
+			sendCmdToCtr(0x0D, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
 		//PH
 		else if (strcmp(widget->name, "Text33") == 0){
@@ -1340,7 +1374,7 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x0B, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
-		//FY
+		//FY 放弃
 		else if (strcmp(widget->name, "Text82") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text82");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
@@ -1368,7 +1402,7 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 			sendCmdToCtr(0x0C, t_num, 0, 0, 0, SET_CHUCHANG);
 
 		}
-		//空
+		//fd 设置温度
 		else if (strcmp(widget->name, "Text80") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text80");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
@@ -1378,10 +1412,13 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 			else{
 				t_num = t_num - 1;
 			}
+			yingxue_base.shezhi_temp = t_num;
 			sprintf(t_buf, "%02X", t_num);
 			ituTextSetString(t_widget, t_buf);
+			//设置温度 模式设置	4	模式设置	设置温度	定升设定
+			sendCmdToCtr(0x04, 0x00, t_num, 0x00, 0x00, SET_TEMP);
 		}
-		//DH
+		//DH pwm
 		else if (strcmp(widget->name, "Text45") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text45");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
@@ -1393,8 +1430,9 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 			}
 			sprintf(t_buf, "%02X", t_num);
 			ituTextSetString(t_widget, t_buf);
-			sendCmdToCtr(0x0D, t_num, 0, 0, 0, SET_CHUCHANG);
+			sendCmdToCtr(0x24, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
+		//HS 回水温度
 		else if (strcmp(widget->name, "Text73") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text73");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
@@ -1405,10 +1443,11 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 				t_num = t_num - 1;
 			}
 			sprintf(t_buf, "%02X", t_num);
+			yingxue_base.huishui_temp = t_num;
 			ituTextSetString(t_widget, t_buf);
 		
 		}
-		//HI
+		//HI 时间设置
 		else if (strcmp(widget->name, "Text58") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text58");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
@@ -1422,6 +1461,7 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x0E, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
+		// ED qu
 		else if (strcmp(widget->name, "Text65") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text65");
 			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
@@ -1435,8 +1475,6 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x15, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
-
-
 	}
 	else{
 		if (state == 0){
@@ -2011,41 +2049,53 @@ static void node_widget_init()
 	key_down_process();
 }
 
-//ok
-//是否闪烁
-//extern char is_shake;
+
 
 //超时的处理函数
 static void over_time_process()
 {
+
 	struct timeval now_t = { 0 };
 	get_rtc_cache_time(&now_t, NULL);
-	//已经处理过
-	if (is_deal_over_time == 1) return;
-	//如何当前的时间大于3秒
-	if (now_t.tv_sec > last_down_time.tv_sec + 3){
-
-		//如果是调整温度，超时,状态开始闪烁,
-		if (yingxue_base.adjust_temp_state == 1){
+	//如果是调整温度，超时,状态开始闪烁,
+	if (yingxue_base.adjust_temp_state == 1){
+		//超时3秒
+		if (now_t.tv_sec > last_down_time.tv_sec + 3){
+			//结束闪烁，调整状态
 			yingxue_base.adjust_temp_state = 2;
-			memset(&last_down_time, 0, sizeof(struct timeval));
-			//已经处理过
-			is_deal_over_time = 1;
-		}
-		else{
-			if (curr_node_widget && (now_t.tv_sec > (last_down_time.tv_sec + 10))){
-				printf("now:%d,last=%d\n", now_t.tv_sec, last_down_time.tv_sec);
-				if (strcmp(curr_node_widget->name, "BackgroundButton3") != 0 && yingxue_base.curr_layer != LAYER1){
-					ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
-				}
-				memset(&last_down_time, 0, sizeof(struct timeval));
-				//已经处理过
-				is_deal_over_time = 1;
-			}
-
+			memmove(&last_down_time, &now_t, sizeof(struct timeval));
 		}
 	}
-	return;
+	//如果是主页面,并且是一个显示状态,从新处理，不跳转
+	else if (curr_node_widget  && strcmp(curr_node_widget->name, "BackgroundButton3") == 0){
+		memmove(&last_down_time, &now_t, sizeof(struct timeval));
+	
+	}
+	//如果是工厂设置页码
+	else if (yingxue_base.curr_layer == LAYER1){
+		//超过5秒发送信息
+/*		if (now_t.tv_sec > (last_down_time.tv_sec + 5)){
+
+			//改变数据 测试用
+#ifdef _WIN32
+			test_buf_1[37]++;
+			test_buf_1[38]++;
+			test_buf_1[39]++;
+
+
+#endif
+
+
+			memmove(&last_down_time, &now_t, sizeof(struct timeval));
+			sendCmdToCtr(0x0A, yingxue_base.fa_num, 0, 0, 0, SET_CHUCHANG);
+		}*/
+	}
+	//其他页码10秒钟后，超时跳转
+	else if (curr_node_widget && (now_t.tv_sec > (last_down_time.tv_sec + 10))){
+		memmove(&last_down_time, &now_t, sizeof(struct timeval));
+		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
+	}
+
 }
 
 //发送命令到控制板
@@ -2161,6 +2211,7 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 	if (idx == 0x00){
 		//得到主机状态
 		dst->machine_state = *(old+1) & 0x03;
+		dst->main_state = *(old + 1);
 		//判断是否故障
 		if ((*(old+1) & 0x04) == 0){
 			dst->is_err = 0;
@@ -2219,13 +2270,21 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 		//无需解析
 	}
 	else if (idx == 0x02){
-		//[2][0] 当前气源号
+		//[2][0] 当前气源号 fa
 		dst->fa_num = *old;
-		//[2][3]
+
+		//[2][3] dh
 		dst->dh_num = *(old + 3);
-		//[2][1]
+
+		//[2][1] ph
 		dst->ph_num = *(old + 1);
-		//[2][4]
+
+		//fy 废弃
+
+		//pl
+		dst->pl_num = *(old+2);
+
+		//[2][4] ne
 		dst->ne_num = *(old + 4);
 	}
 	else if (idx == 0x03){
@@ -2235,47 +2294,14 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 			dst->is_err = 1;
 			dst->err_no = 0xEC;
 		}
+		//工厂设置PWM
+		dst->pwm_num = *(old + 4);
 	}
 	
 }
 
 
-#ifdef _WIN32
 
-
-unsigned char test_buf_1[68] = {
-	//[0][0] //[0][1]                                                 //erno
-	0xEA, 0x1B, 0x10, 0x4D, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x79, 0x53,
-	0xEA, 0x1B, 0x11, 0x01, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x48, 0x35,
-	0xEA, 0x1B, 0x12, 0x02, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30, 0x31, 0x05, 0x4B,
-	0xEA, 0x1B, 0x13, 0x03, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40, 0x41, 0xBE, 0x5F,
-};
-
-
-//win虚拟机测试
-static unsigned char win_test()
-{
-	/*  0xEA, 0x1B, 0x10, 0x4D, 0x00, 0x00, 0x00, 0x2D, 0x00, 0x00, 0x00, 0x00, 0x41, 0x00, 0x00, 0x79, 0x53,
-	0xEA, 0x1B, 0x11, 0x01, 0x00, 0x00, 0x00, 0x1E, 0x0A, 0x2A, 0x28, 0x26, 0x2A, 0x00, 0x00, 0x48, 0x35,
-	0xEA, 0x1B, 0x12, 0x00, 0xCD, 0x80, 0x9E, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x05, 0x4B,
-	0xEA, 0x1B, 0x13, 0x00, 0x00, 0x05, 0x40, 0x50, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBE, 0x5F,*/
-/*	unsigned char test_buf[68] = {
-		//[0][0] //[0][1]                                                 //erno
-		0xEA, 0x1B, 0x10, 0x4D, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x79, 0x53,
-		0xEA, 0x1B, 0x11, 0x01, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x48, 0x35,
-		0xEA, 0x1B, 0x12, 0x02, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30, 0x31, 0x05, 0x4B,
-		0xEA, 0x1B, 0x13, 0x03, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40, 0x41, 0xBE, 0x5F,
-	};*/
-	static int idx;
-	unsigned char res;
-
-	res = test_buf_1[idx++];
-	if (idx == 68){
-		idx = 0;
-	}
-	return res;
-}
-#endif
 //ok
 //线程串口回调函数
 static void* UartFunc(void* arg)
@@ -2285,6 +2311,9 @@ static void* UartFunc(void* arg)
 	struct main_pthread_mq_tag main_pthread_mq;
 	//缓存数据
 	struct uart_data_tag uart_data;
+
+
+
 	memset(&uart_data, 0, sizeof(struct uart_data_tag));
 
 	//线程数据
@@ -2301,6 +2330,9 @@ static void* UartFunc(void* arg)
 	//默认应答
 	uint8_t texBufArray[11] = { 0 };
 	uint8_t backBufArray[11] = { 0xEB, 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xD8, 0x2A };
+	
+
+	
 	//初始化时间
 	get_rtc_time(&rev_time, NULL);
 	while (1){
@@ -2357,7 +2389,7 @@ static void* UartFunc(void* arg)
 				}
 				//没有指令就应答
 				else{
-					write(UART_PORT, backBufArray, sizeof(texBufArray));
+					write(UART_PORT, backBufArray, sizeof(backBufArray));
 				}
 			}
 		}
@@ -2413,6 +2445,10 @@ static void run_time_task()
 		yingxue_base.ph_num = child_to_pthread_mq_tag.ph_num;//[2][1]
 		yingxue_base.ne_num = child_to_pthread_mq_tag.ne_num;//[2][4]
 		yingxue_base.huishui_temp_1 = child_to_pthread_mq_tag.huishui_temp;//[3][1] 回水温度 显示的回水温度
+		
+		yingxue_base.pl_num = child_to_pthread_mq_tag.pl_num;
+		yingxue_base.pwm_num = child_to_pthread_mq_tag.pwm_num;
+		yingxue_base.main_state = child_to_pthread_mq_tag.main_state;
 		/*LOG_CHILD_MQ(child_to_pthread_mq_tag);*/
 	
 	}
@@ -3053,6 +3089,8 @@ set_time_lock(unsigned char hour, unsigned char min)
 
 }
 
+unsigned char is_set_factory = 0;
+
 int SceneRun(void)
 {
     SDL_Event   ev;
@@ -3181,10 +3219,24 @@ int SceneRun(void)
 		//蜂鸣器关闭
 		BUZZER_CLOSE(0);
 		
+		//如果当前模式是测试模式
+		if (is_set_factory == 1){
+			//第4位 进入测试模式正常
+			if (yingxue_base.main_state & 0x8){
+				//如果当前是错误页面请进入设置页面
+				if (yingxue_base.curr_layer == ERRORLAYER){
+					ituLayerGoto(ituSceneFindWidget(&theScene, "layer1"));
+				}
+			}
+			else{
+				ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
+			}
+		}
+
 
 
 		//判断是否有错误代码.10秒后判读
-		if (power_on_time.tv_sec + 10 < yingxue_base.cache_time.tv_sec){
+		if (0 && (power_on_time.tv_sec + 10 < yingxue_base.cache_time.tv_sec)){
 			if (yingxue_base.is_err){
 				if (yingxue_base.err_no == 0xe0){
 					ituLayerGoto(ituSceneFindWidget(&theScene, "E0Layer"));
@@ -3290,6 +3342,25 @@ int SceneRun(void)
 					break;
 				//关机
 				case 1073741885:
+					is_set_factory = 1;
+					
+					if (yingxue_base.pl_num > 0){
+						printf("to send to\n");
+						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
+						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
+						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
+						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
+						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
+
+
+					
+					}
+					else{
+						printf("no send\n");
+					}
+
+
+
 					long_time_count++;
 					break;
 

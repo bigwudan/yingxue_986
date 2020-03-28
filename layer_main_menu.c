@@ -627,6 +627,9 @@ static void Layer1()
 {
 	ITUWidget *t_widget = NULL;
 	char t_buf[10] = { 0 };
+	unsigned char (*p_setdata)[10] = NULL;
+	unsigned char set_num = 0;
+	p_setdata = yingxue_base.set_factory_data + yingxue_base.fa_num; 
 	//默认第一个
 	curr_node_widget = &layer1_0;
 
@@ -679,50 +682,62 @@ static void Layer1()
 	t_widget = ituSceneFindWidget(&theScene, "Text96");
 	ituTextSetString(t_widget, t_buf);
 
+
 	//pa
-	sprintf(t_buf, "%02d", yingxue_base.fa_num);
+	set_num = (*((*p_setdata) + 0) > 0) ? *((*p_setdata) + 0) : yingxue_base.fa_num;
+	sprintf(t_buf, "%02X", set_num);
 	t_widget = ituSceneFindWidget(&theScene, "Text22");
 	ituTextSetString(t_widget, t_buf);
 
 	//dh
-	sprintf(t_buf, "%02d", yingxue_base.dh_num);
+	set_num = (*((*p_setdata) + 1) > 0) ? *((*p_setdata) + 1) : yingxue_base.dh_num;
+	sprintf(t_buf, "%02X", set_num);
 	t_widget = ituSceneFindWidget(&theScene, "Text90");
 	ituTextSetString(t_widget, t_buf);
 
 	//ph
-	sprintf(t_buf, "%02d", yingxue_base.ph_num);
+	set_num = (*((*p_setdata) + 2) > 0) ? *((*p_setdata) + 2) : yingxue_base.ph_num;
+	sprintf(t_buf, "%02X", set_num);
 	t_widget = ituSceneFindWidget(&theScene, "Text33");
 	ituTextSetString(t_widget, t_buf);
 
-	//fy
+	//fy 取消
 	t_widget = ituSceneFindWidget(&theScene, "Text82");
 	ituTextSetString(t_widget, "00");
 
 	//pl
-	
+	set_num = (*((*p_setdata) + 4) > 0) ? *((*p_setdata) + 4) : yingxue_base.pl_num;
+	sprintf(t_buf, "%02X", set_num);
 	t_widget = ituSceneFindWidget(&theScene, "Text39");
-	ituTextSetString(t_widget, "00");
+	ituTextSetString(t_widget, t_buf);
 
-	//Fd对应前面协议中防冻，把前面协议中防冻参数调出来可调(无防冻参数，只有开启)
+	//Fd对应设置温度
+
+
+	set_num = yingxue_base.shezhi_temp;
+	sprintf(t_buf, "%02d", set_num);
 	t_widget = ituSceneFindWidget(&theScene, "Text80");
-	ituTextSetString(t_widget, "00");
+	ituTextSetString(t_widget, t_buf);
 	
-	//dh
-	sprintf(t_buf, "%02d", yingxue_base.dh_num);
+	//dh pwm
+	set_num = (*((*p_setdata) + 6) > 0) ? *((*p_setdata) + 6) : yingxue_base.pwm_num;
+	sprintf(t_buf, "%02X", set_num);
 	t_widget = ituSceneFindWidget(&theScene, "Text45");
 	ituTextSetString(t_widget, t_buf);
 
-	//hs
-	sprintf(t_buf, "%02d", yingxue_base.huishui_temp_1);
+	//hs 回水温度
+	sprintf(t_buf, "%02X", yingxue_base.huishui_temp);
 	t_widget = ituSceneFindWidget(&theScene, "Text73");
 	ituTextSetString(t_widget, t_buf);
 
 	//hi
-	sprintf(t_buf, "%02d", yingxue_base.ne_num);
+	set_num = (*((*p_setdata) + 8) > 0) ? *((*p_setdata) + 8) : yingxue_base.ne_num;
+	sprintf(t_buf, "%02X", set_num);
+
 	t_widget = ituSceneFindWidget(&theScene, "Text58");
 	ituTextSetString(t_widget, t_buf);
 
-	//ed
+	//ed 开启报错
 	t_widget = ituSceneFindWidget(&theScene, "Text65");
 	ituTextSetString(t_widget, "00");
 	return;
@@ -737,6 +752,7 @@ bool YX_MenuOnEnter(ITUWidget* widget, char* param)
 
 	//welcome页面
 	if (strcmp(widget->name, "welcom") == 0){
+		//进入测试设置工厂
 		curr_node_widget = NULL;
 		yingxue_base.curr_layer = WELCOM;
 	}
@@ -1050,6 +1066,7 @@ void polling_layer1()
 {
 	ITUWidget *t_widget = NULL;
 	char t_buf[10] = { 0 };
+	unsigned char set_num = 0;
 	//水流
 	if (yingxue_base.state_show & 0x01){
 		//显示
@@ -1098,6 +1115,92 @@ void polling_layer1()
 	sprintf(t_buf, "%02d", yingxue_base.wind_rate);
 	t_widget = ituSceneFindWidget(&theScene, "Text96");
 	ituTextSetString(t_widget, t_buf);
+
+
+
+	//显示数据
+
+	//pa
+	if (layer1_6.state == 0){
+		set_num = yingxue_base.fa_num;
+		sprintf(t_buf, "%02X", set_num);
+		t_widget = ituSceneFindWidget(&theScene, "Text22");
+		ituTextSetString(t_widget, t_buf);
+	}
+
+	//dh
+	if (layer1_7.state == 0){
+		set_num = yingxue_base.dh_num;
+		sprintf(t_buf, "%02X", set_num);
+		t_widget = ituSceneFindWidget(&theScene, "Text90");
+		ituTextSetString(t_widget, t_buf);
+	}
+
+
+
+	//ph
+	if (layer1_8.state == 0){
+		set_num = yingxue_base.ph_num;
+		sprintf(t_buf, "%02X", set_num);
+		t_widget = ituSceneFindWidget(&theScene, "Text33");
+		ituTextSetString(t_widget, t_buf);
+
+	}
+
+	//fy 取消
+	t_widget = ituSceneFindWidget(&theScene, "Text82");
+	ituTextSetString(t_widget, "00");
+
+	//pl
+	if (layer1_10.state == 0){
+		set_num = yingxue_base.pl_num;
+		sprintf(t_buf, "%02X", set_num);
+		t_widget = ituSceneFindWidget(&theScene, "Text39");
+		ituTextSetString(t_widget, t_buf);
+	
+	}
+
+
+
+	//Fd对应设置温度
+	if (layer1_11.state == 0){
+		set_num = yingxue_base.shezhi_temp;
+		sprintf(t_buf, "%02d", set_num);
+		t_widget = ituSceneFindWidget(&theScene, "Text80");
+		ituTextSetString(t_widget, t_buf);
+	
+	}
+
+
+	//dh pwm
+	if (layer1_12.state == 0){
+		set_num = yingxue_base.pwm_num;
+		sprintf(t_buf, "%02X", set_num);
+		t_widget = ituSceneFindWidget(&theScene, "Text45");
+		ituTextSetString(t_widget, t_buf);
+	}
+
+
+	//hs 回水温度
+	if (layer1_13.state == 0){
+		sprintf(t_buf, "%02X", yingxue_base.huishui_temp);
+		t_widget = ituSceneFindWidget(&theScene, "Text73");
+		ituTextSetString(t_widget, t_buf);
+	}
+
+
+	//hi
+	if (layer1_14.state == 0){
+		set_num = yingxue_base.ne_num;
+		sprintf(t_buf, "%02X", set_num);
+
+		t_widget = ituSceneFindWidget(&theScene, "Text58");
+		ituTextSetString(t_widget, t_buf);
+	}
+
+
+
+
 	return;
 
 }

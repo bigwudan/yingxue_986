@@ -189,10 +189,23 @@ struct yingxue_base_tag{
 	unsigned char dh_num;//[2][3]
 	unsigned char ph_num;//[2][1]
 	unsigned char ne_num;//[2][4]
+
+	
+	unsigned char pl_num;//[2][2]
+
+	
+	unsigned char pwm_num;//[3][4]
+
+
 	unsigned char huishui_temp_1;//[3][1] 回水温度 显示的回水温度
 	struct timeval cache_time; //每次轮询的缓存时间
 	//当前的时间
 	enum CURR_LAYER curr_layer;
+	//工厂设置模式数据
+	unsigned char set_factory_data[6][10];  //0 pa 1 dh 2 ph 3 fy 4 pl 5 fd 6 dh(pwm) 7 hs 8 hi 9 ed
+	//主机状态 [0][1] 故障，调试，状态
+	unsigned char main_state;
+
 };
 
 
@@ -235,8 +248,18 @@ struct child_to_pthread_mq_tag{
 	unsigned char ph_num;
 	//[2][4]
 	unsigned char ne_num;
+
+	//[2][2]
+	unsigned char pl_num;
+
+	//[3][4]
+	unsigned char pwm_num;
+
 	//[3][1] 回水温度
 	unsigned char huishui_temp;
+	//主机状态 [0][1] 故障，调试，状态
+	unsigned char main_state;
+
 };
 
 //串口的数据
