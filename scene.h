@@ -127,6 +127,17 @@ enum main_pthread_mq_state
 	SET_CHUCHANG //出厂设置
 };
 
+//需要保存的数据状态
+enum finish_edit_data{
+	SHEZHI_TEMP,//设置温度
+	YURE_MOSHI,//预热模式,或者取消
+	HUISHUI_TEMP,//回水温度
+	SHEZHISHIJIAN,//设置时间
+	MOSHI //模式
+
+};
+
+
 //当前显示的页面
 enum CURR_LAYER
 {
@@ -350,6 +361,10 @@ void processCmdToCtrData(unsigned char cmd, unsigned char data_1,
 void polling_welcom();
 
 void polling_main();
+
+//设置完成后，加入回调
+void
+finish_data_edit_bc(enum finish_edit_data state);
 
 //设置时间并且加锁
 void set_time_lock(unsigned char hour, unsigned char min);

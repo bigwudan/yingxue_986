@@ -1041,6 +1041,8 @@ polling_main()
 	else if (yingxue_base.adjust_temp_state == 3){
 		//如果超时，跳转状态0中
 		if (yingxue_base.cache_time.tv_sec >= (during_tm.tv_sec) + 5){
+
+			finish_data_edit_bc(SHEZHI_TEMP);
 			yingxue_base.adjust_temp_state = 0;
 		}
 		//开始闪烁
@@ -1240,4 +1242,21 @@ bool ERROnTimer(ITUWidget* widget, char* param)
 void MainMenuReset(void)
 {
 	return;
+}
+
+//回调函数完成数据修改后
+void 
+finish_data_edit_bc(enum finish_edit_data state)
+{
+	if (state == SHEZHI_TEMP){
+		printf("save shezhi_tmp=0x%02X\n", yingxue_base.shezhi_temp);
+	
+	}
+	else if (state == YURE_MOSHI){
+		printf("save yure\n");
+	}
+
+
+
+
 }

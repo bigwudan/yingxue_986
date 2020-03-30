@@ -737,6 +737,7 @@ static void yure_widget_confirm_cb(struct node_widget *widget, unsigned char sta
 			SEND_OPEN_YURE_CMD();
 
 		}
+		finish_data_edit_bc(YURE_MOSHI);
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 	}
@@ -756,6 +757,7 @@ static void yure_widget_confirm_cb(struct node_widget *widget, unsigned char sta
 			//发送预热开始
 			SEND_OPEN_YURE_CMD();
 		}
+		finish_data_edit_bc(YURE_MOSHI);
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 	}
@@ -775,6 +777,7 @@ static void yure_widget_confirm_cb(struct node_widget *widget, unsigned char sta
 		else{
 			yingxue_base.yure_mode = 3;
 		}
+		finish_data_edit_bc(YURE_MOSHI);
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 	}
@@ -840,6 +843,7 @@ static void yure_settime_widget_confirm_cb(struct node_widget *widget, unsigned 
 	ITUWidget *t_widget = NULL;
 	int value = widget->value;
 	if (strcmp(widget->name, "BackgroundButton65") == 0){
+		finish_data_edit_bc(SHEZHISHIJIAN);
 		t_widget = ituSceneFindWidget(&theScene, "yureLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 	}
@@ -887,6 +891,7 @@ static void yure_yureshezhiLayer_widget_confirm_cb(struct node_widget *widget, u
 				num = atoi(t_buf);
 				//发送改变回水温度,也就是预热回温温度
 				yingxue_base.huishui_temp = num;
+				finish_data_edit_bc(HUISHUI_TEMP);
 			}
 			//北京时间小时
 			else if ((strcmp(widget->name, "Background3") == 0) || (strcmp(widget->name, "Background4") == 0)){
@@ -972,6 +977,7 @@ static void moshi_widget_confirm_cb(struct node_widget *widget, unsigned char st
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 		yingxue_base.adjust_temp_state = 2;
+		finish_data_edit_bc(MOSHI);
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton11") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
@@ -980,6 +986,7 @@ static void moshi_widget_confirm_cb(struct node_widget *widget, unsigned char st
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 		yingxue_base.adjust_temp_state = 2;
+		finish_data_edit_bc(MOSHI);
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton12") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
@@ -988,6 +995,7 @@ static void moshi_widget_confirm_cb(struct node_widget *widget, unsigned char st
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 		yingxue_base.adjust_temp_state = 2;
+		finish_data_edit_bc(MOSHI);
 	}
 	else if (strcmp(widget->name, "moshi_BackgroundButton13") == 0){
 		//发送模式命令就发指令 4 ： 模式设置  ： 默认 0 ，设置温度 ： XX ， 定升设定  ： 默认值时发0 
@@ -996,6 +1004,7 @@ static void moshi_widget_confirm_cb(struct node_widget *widget, unsigned char st
 		t_widget = ituSceneFindWidget(&theScene, "MainLayer");
 		ituLayerGoto((ITULayer *)t_widget);
 		yingxue_base.adjust_temp_state = 2;
+		finish_data_edit_bc(MOSHI);
 	}
 }
 
@@ -2073,22 +2082,7 @@ static void over_time_process()
 	}
 	//如果是工厂设置页码
 	else if (yingxue_base.curr_layer == LAYER1){
-		//超过5秒发送信息
-/*		if (now_t.tv_sec > (last_down_time.tv_sec + 5)){
 
-			//改变数据 测试用
-#ifdef _WIN32
-			test_buf_1[37]++;
-			test_buf_1[38]++;
-			test_buf_1[39]++;
-
-
-#endif
-
-
-			memmove(&last_down_time, &now_t, sizeof(struct timeval));
-			sendCmdToCtr(0x0A, yingxue_base.fa_num, 0, 0, 0, SET_CHUCHANG);
-		}*/
 	}
 	//其他页码10秒钟后，超时跳转
 	else if (curr_node_widget && (now_t.tv_sec > (last_down_time.tv_sec + 10))){
@@ -3236,7 +3230,7 @@ int SceneRun(void)
 
 
 		//判断是否有错误代码.10秒后判读
-		if (0 && (power_on_time.tv_sec + 10 < yingxue_base.cache_time.tv_sec)){
+		if ((power_on_time.tv_sec + 10 < yingxue_base.cache_time.tv_sec)){
 			if (yingxue_base.is_err){
 				if (yingxue_base.err_no == 0xe0){
 					ituLayerGoto(ituSceneFindWidget(&theScene, "E0Layer"));
