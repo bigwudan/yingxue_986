@@ -685,7 +685,7 @@ static void Layer1()
 
 	//pa
 	set_num = (*((*p_setdata) + 0) > 0) ? *((*p_setdata) + 0) : yingxue_base.fa_num;
-	sprintf(t_buf, "%02X", set_num);
+	sprintf(t_buf, "%02d", set_num);
 	t_widget = ituSceneFindWidget(&theScene, "Text22");
 	ituTextSetString(t_widget, t_buf);
 
@@ -711,28 +711,30 @@ static void Layer1()
 	t_widget = ituSceneFindWidget(&theScene, "Text39");
 	ituTextSetString(t_widget, t_buf);
 
-	//Fd对应设置温度
-
-
-	set_num = yingxue_base.shezhi_temp;
-	sprintf(t_buf, "%02d", set_num);
+	//Fd对应防冻
+	set_num = yingxue_base.fd_num;
 	t_widget = ituSceneFindWidget(&theScene, "Text80");
-	ituTextSetString(t_widget, t_buf);
+	if (set_num == 0){
+		ituTextSetString(t_widget, "OFF");
+	}
+	else{
+		ituTextSetString(t_widget, "ON");
+	}
 	
 	//dh pwm
 	set_num = (*((*p_setdata) + 6) > 0) ? *((*p_setdata) + 6) : yingxue_base.pwm_num;
-	sprintf(t_buf, "%02X", set_num);
+	sprintf(t_buf, "%02d", set_num);
 	t_widget = ituSceneFindWidget(&theScene, "Text45");
 	ituTextSetString(t_widget, t_buf);
 
 	//hs 回水温度
-	sprintf(t_buf, "%02X", yingxue_base.huishui_temp);
+	sprintf(t_buf, "%02d", yingxue_base.huishui_temp);
 	t_widget = ituSceneFindWidget(&theScene, "Text73");
 	ituTextSetString(t_widget, t_buf);
 
 	//hi
 	set_num = (*((*p_setdata) + 8) > 0) ? *((*p_setdata) + 8) : yingxue_base.ne_num;
-	sprintf(t_buf, "%02X", set_num);
+	sprintf(t_buf, "%02d", set_num);
 
 	t_widget = ituSceneFindWidget(&theScene, "Text58");
 	ituTextSetString(t_widget, t_buf);
@@ -816,7 +818,7 @@ polling_welcom()
 			flag = 1; //开机中
 		}
 		else{
-			printf("*******line=%d,flag=%d,",__LINE__, flag);
+
 			printf("cache_time=%d,cache_time=%d,", yingxue_base.cache_time.tv_sec, yingxue_base.cache_time.tv_sec);
 			printf("rec_time=%d,rec_time=%d,", rec_time.tv_sec, rec_time.tv_sec);
 			printf("\n");
@@ -889,6 +891,7 @@ polling_main()
 	//在0普通状态下面，或者4解除锁定上下移动状态，需要更新状态值
 	if (yingxue_base.adjust_temp_state == 0 || yingxue_base.adjust_temp_state == 4){
 		//显示出水温度
+
 		sprintf(t_buf, "%d", yingxue_base.chushui_temp);
 		t_widget = ituSceneFindWidget(&theScene, "Text17");
 		ituWidgetSetVisible(t_widget, true);
@@ -1125,7 +1128,7 @@ void polling_layer1()
 	//pa
 	if (layer1_6.state == 0){
 		set_num = yingxue_base.fa_num;
-		sprintf(t_buf, "%02X", set_num);
+		sprintf(t_buf, "%02d", set_num);
 		t_widget = ituSceneFindWidget(&theScene, "Text22");
 		ituTextSetString(t_widget, t_buf);
 	}
@@ -1164,12 +1167,16 @@ void polling_layer1()
 
 
 
-	//Fd对应设置温度
+	//Fd对应 防冻开关
 	if (layer1_11.state == 0){
-		set_num = yingxue_base.shezhi_temp;
-		sprintf(t_buf, "%02d", set_num);
+		set_num = yingxue_base.fd_num;
 		t_widget = ituSceneFindWidget(&theScene, "Text80");
-		ituTextSetString(t_widget, t_buf);
+		if (set_num == 0){
+			ituTextSetString(t_widget, "OFF");
+		}
+		else{
+			ituTextSetString(t_widget, "ON");
+		}
 	
 	}
 
@@ -1177,7 +1184,7 @@ void polling_layer1()
 	//dh pwm
 	if (layer1_12.state == 0){
 		set_num = yingxue_base.pwm_num;
-		sprintf(t_buf, "%02X", set_num);
+		sprintf(t_buf, "%0d", set_num);
 		t_widget = ituSceneFindWidget(&theScene, "Text45");
 		ituTextSetString(t_widget, t_buf);
 	}
@@ -1185,7 +1192,7 @@ void polling_layer1()
 
 	//hs 回水温度
 	if (layer1_13.state == 0){
-		sprintf(t_buf, "%02X", yingxue_base.huishui_temp);
+		sprintf(t_buf, "%0d", yingxue_base.huishui_temp);
 		t_widget = ituSceneFindWidget(&theScene, "Text73");
 		ituTextSetString(t_widget, t_buf);
 	}
@@ -1194,7 +1201,7 @@ void polling_layer1()
 	//hi
 	if (layer1_14.state == 0){
 		set_num = yingxue_base.ne_num;
-		sprintf(t_buf, "%02X", set_num);
+		sprintf(t_buf, "%02d", set_num);
 
 		t_widget = ituSceneFindWidget(&theScene, "Text58");
 		ituTextSetString(t_widget, t_buf);
@@ -1207,13 +1214,7 @@ void polling_layer1()
 
 }
 
-//错误轮询
-void polling_err()
-{
-	if (yingxue_base.is_err == 0){
-		ituLayerGoto(ituSceneFindWidget(&theScene, "MainLayer"));
-	}
-}
+
 
 
 //樱雪主页面定时任务

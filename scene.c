@@ -1341,14 +1341,14 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 		//(unsigned char cmd, unsigned char data_1, unsigned char data_2, unsigned char data_3, unsigned char data_4, enum main_pthread_mq_state state)
 		if (strcmp(widget->name, "Text22") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text22");
-			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
 			if (state == 0){
 				t_num = t_num + 1;
 			}
 			else{
 				t_num = t_num - 1;
 			}
-			sprintf(t_buf, "%02X", t_num);
+			sprintf(t_buf, "%02d", t_num);
 			ituTextSetString(t_widget, t_buf);
 
 			//t_num = 0x01;
@@ -1411,47 +1411,46 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 			sendCmdToCtr(0x0C, t_num, 0, 0, 0, SET_CHUCHANG);
 
 		}
-		//fd 设置温度
+		//fd 设置防冻
 		else if (strcmp(widget->name, "Text80") == 0){
+
 			t_widget = ituSceneFindWidget(&theScene, "Text80");
-			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
-			if (state == 0){
-				t_num = t_num + 1;
+			if (strcmp(ituTextGetString((ITUText*)t_widget), "OFF") == 0){
+				ituTextSetString(t_widget, "ON");
+				yingxue_base.fa_num = 1;
+				sendCmdToCtr(0x1F, 0, 0, 0, 0, SET_CHUCHANG);
 			}
 			else{
-				t_num = t_num - 1;
+				ituTextSetString(t_widget, "OFF");
+				yingxue_base.fa_num = 0;
+				sendCmdToCtr(0x1F, 1, 0, 0, 0, SET_CHUCHANG);
 			}
-			yingxue_base.shezhi_temp = t_num;
-			sprintf(t_buf, "%02X", t_num);
-			ituTextSetString(t_widget, t_buf);
-			//设置温度 模式设置	4	模式设置	设置温度	定升设定
-			sendCmdToCtr(0x04, 0x00, t_num, 0x00, 0x00, SET_TEMP);
 		}
 		//DH pwm
 		else if (strcmp(widget->name, "Text45") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text45");
-			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
 			if (state == 0){
 				t_num = t_num + 1;
 			}
 			else{
 				t_num = t_num - 1;
 			}
-			sprintf(t_buf, "%02X", t_num);
+			sprintf(t_buf, "%02d", t_num);
 			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x24, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
 		//HS 回水温度
 		else if (strcmp(widget->name, "Text73") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text73");
-			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
 			if (state == 0){
 				t_num = t_num + 1;
 			}
 			else{
 				t_num = t_num - 1;
 			}
-			sprintf(t_buf, "%02X", t_num);
+			sprintf(t_buf, "%02d", t_num);
 			yingxue_base.huishui_temp = t_num;
 			ituTextSetString(t_widget, t_buf);
 		
@@ -1459,14 +1458,14 @@ static void layer1_up_down_cb(struct node_widget *widget, unsigned char state)
 		//HI 时间设置
 		else if (strcmp(widget->name, "Text58") == 0){
 			t_widget = ituSceneFindWidget(&theScene, "Text58");
-			t_num = hextointchange(ituTextGetString((ITUText*)t_widget));
+			t_num = atoi(ituTextGetString((ITUText*)t_widget));
 			if (state == 0){
-				t_num = t_num + 1;
+				t_num = t_num + 10;
 			}
 			else{
-				t_num = t_num - 1;
+				t_num = t_num - 10;
 			}
-			sprintf(t_buf, "%02X", t_num);
+			sprintf(t_buf, "%02d", t_num);
 			ituTextSetString(t_widget, t_buf);
 			sendCmdToCtr(0x0E, t_num, 0, 0, 0, SET_CHUCHANG);
 		}
@@ -2249,6 +2248,7 @@ void process_frame(struct child_to_pthread_mq_tag *dst, const unsigned char *src
 		dst->shezhi_temp = *(old+4);
 		//出水温度[0][5]
 		dst->chushui_temp = *(old + 5);
+
 		//进水温度[0][6]
 		dst->jinshui_temp = *(old + 6);
 		//错误代码或者比例阀电流[0][8]
@@ -2325,7 +2325,7 @@ static void* UartFunc(void* arg)
 	uint8_t texBufArray[11] = { 0 };
 	uint8_t backBufArray[11] = { 0xEB, 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xD8, 0x2A };
 	
-
+	memset(&child_to_pthread_mq, 0, sizeof(struct child_to_pthread_mq_tag));
 	
 	//初始化时间
 	get_rtc_time(&rev_time, NULL);
@@ -2422,6 +2422,9 @@ static void run_time_task()
 	get_rtc_cache_time(&tm, NULL);
 	tm_t = localtime(&tm.tv_sec);
 	struct child_to_pthread_mq_tag child_to_pthread_mq_tag;
+	memset(&child_to_pthread_mq_tag, 0, sizeof(struct child_to_pthread_mq_tag));
+
+
 	int flag = 0;
 	//接受数据
 	flag = mq_receive(childQueue, &child_to_pthread_mq_tag, sizeof(struct child_to_pthread_mq_tag), NULL);
@@ -2429,6 +2432,7 @@ static void run_time_task()
 		yingxue_base.shezhi_temp = child_to_pthread_mq_tag.shezhi_temp;
 		yingxue_base.state_show = child_to_pthread_mq_tag.state_show;
 		yingxue_base.chushui_temp = child_to_pthread_mq_tag.chushui_temp;
+
 		yingxue_base.jinshui_temp = child_to_pthread_mq_tag.jinshui_temp;
 		yingxue_base.err_no = child_to_pthread_mq_tag.err_no;
 		yingxue_base.is_err = child_to_pthread_mq_tag.is_err;
@@ -3219,18 +3223,14 @@ int SceneRun(void)
 			if (yingxue_base.main_state & 0x8){
 				//如果当前是错误页面请进入设置页面
 				if (yingxue_base.curr_layer == ERRORLAYER){
-					ituLayerGoto(ituSceneFindWidget(&theScene, "layer1"));
+					ituLayerGoto(ituSceneFindWidget(&theScene, "Layer1"));
 				}
 			}
 			else{
 				ituLayerGoto(ituSceneFindWidget(&theScene, "ECLayer"));
 			}
-		}
-
-
-
-		//判断是否有错误代码.10秒后判读
-		if ((power_on_time.tv_sec + 10 < yingxue_base.cache_time.tv_sec)){
+			//判断是否有错误代码.10秒后判读
+		}else if ((power_on_time.tv_sec + 10 < yingxue_base.cache_time.tv_sec)){
 			if (yingxue_base.is_err){
 				if (yingxue_base.err_no == 0xe0){
 					ituLayerGoto(ituSceneFindWidget(&theScene, "E0Layer"));
@@ -3340,14 +3340,11 @@ int SceneRun(void)
 					
 					if (yingxue_base.pl_num > 0){
 						printf("to send to\n");
-						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
-						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
-						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
-						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
-						sendCmdToCtr(0x0C, yingxue_base.pl_num, 0, 0, 0, SET_CHUCHANG);
-
-
-					
+						sendCmdToCtr(0x0A, yingxue_base.fa_num, 0, 0, 0, SET_CHUCHANG);
+						sendCmdToCtr(0x0A, yingxue_base.fa_num, 0, 0, 0, SET_CHUCHANG);
+						sendCmdToCtr(0x0A, yingxue_base.fa_num, 0, 0, 0, SET_CHUCHANG);
+						sendCmdToCtr(0x0A, yingxue_base.fa_num, 0, 0, 0, SET_CHUCHANG);
+						sendCmdToCtr(0x0A, yingxue_base.fa_num, 0, 0, 0, SET_CHUCHANG);
 					}
 					else{
 						printf("no send\n");

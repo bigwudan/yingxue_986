@@ -207,6 +207,9 @@ struct yingxue_base_tag{
 	
 	unsigned char pwm_num;//[3][4]
 
+	//防冻
+	unsigned char fd_num;//防冻
+
 
 	unsigned char huishui_temp_1;//[3][1] 回水温度 显示的回水温度
 	struct timeval cache_time; //每次轮询的缓存时间
@@ -265,6 +268,9 @@ struct child_to_pthread_mq_tag{
 
 	//[3][4]
 	unsigned char pwm_num;
+
+	//防冻
+	unsigned char fd_num;
 
 	//[3][1] 回水温度
 	unsigned char huishui_temp;
